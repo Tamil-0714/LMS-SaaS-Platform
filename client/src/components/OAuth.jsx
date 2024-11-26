@@ -1,14 +1,12 @@
+import axios from "axios";
 import React, { useEffect, useState } from "react";
 
-const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
+const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
-
-const OAuth = () => {
-
-  useEffect(()=>{
+const OAuth = ({ style }) => {
+  useEffect(() => {
     console.log(`this is client id : ${clientId}`);
-    
-  },[])
+  }, []);
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -21,7 +19,7 @@ const OAuth = () => {
     // Render the Google Sign-In button
     window.google.accounts.id.renderButton(
       document.getElementById("googleSignInButton"),
-      { type: "standard",theme:"filled_black",width:"400", size: "large" }
+      { type: "standard", theme: "filled_black", width: "200", size: "large" }
     );
   }, []);
 
@@ -29,28 +27,42 @@ const OAuth = () => {
     const token = response.credential; // The ID token
 
     // Send the token to your backend for validation
-    const res = await fetch("http://localhost:8020/auth/google/callback", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ token }),
-    });
+    try {
+      const res = await axios.post(
+        "http://localhost:8020/auth/google/callback",
+        {
+          token,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-    if (res.ok) {
-      const userInfo = await res.json(); // User information from Google
-      setUser(userInfo);
-    } else {
-      console.error("Invalid Token");
+      if (res.status === 200) {
+        const { userInfo, authToken } = res.data; // Extract user info and token
+        setUser(userInfo);
+        console.log(`user Info ${userInfo}`);
+        console.log(`Auth token ${authToken}`);
+
+        // Store the token securely
+        localStorage.setItem("authToken", authToken);
+      }
+    } catch (error) {
+      console.error(
+        "Invalid Token or Error Occurred:",
+        error.response?.data || error.message
+      );
     }
   };
 
   const handleLogout = () => {
     setUser(null); // Clear user session
+    localStorage.removeItem("authToken");
   };
   return (
-    <div>
-      <h1>Google Login</h1>
+    <div style={style}>
       {!user ? (
         <div id="googleSignInButton"></div>
       ) : (
