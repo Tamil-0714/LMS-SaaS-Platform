@@ -1,9 +1,11 @@
 const express = require("express");
 const cors = require("cors");
-const middleware = require("./middleware/middleware");
+const { verifyToken } = require("./middleware/middleware");
 const videoRoute = require("./routes/videoRoute");
 const { OAuth2Client } = require("google-auth-library");
-const jwt = require("jsonwebtoken");
+const axios = require("axios");
+const { insertUserAuthId } = require("./DB/DB");
+
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 require("dotenv").config();
 
@@ -27,19 +29,12 @@ const googleAuth = async (token) => {
   });
   const payload = ticket.getPayload();
   const { sub, email, name, picture } = payload;
-
+  const authToken = sub;
   console.log(`user ${name} verified`);
 
-  // Create a JWT token
-  const authToken = jwt.sign(
-    {
-      userId: sub, // Unique identifier
-      name,
-      picture,
-    },
-    process.env.JWT_SECRET, // Your secret key
-    { expiresIn: "12d" } // Token validity (adjust as needed)
-  );
+  const rows = await insertUserAuthId(sub, email, name, picture);
+
+  console.log("this is rows : " + rows);
 
   return { authToken, userInfo: { name, email, picture } };
 };
@@ -59,8 +54,35 @@ app.post("/auth/google/callback", async (req, res) => {
   }
 });
 
+app.get("/api/verify/auth", verifyToken, (req, res) => {
+  res.status(200).json({ message: "Token verified", user: req.user });
+});
+
 app.get("/video/:id", videoRoute);
 
+app.get("/proxy-image", async (req, res) => {
+  const imageUrl = req.query.url;
+
+  if (!imageUrl) {
+    return res.status(400).send("Image URL is required");
+  }
+
+  try {
+    // Fetch the image with axios
+    const response = await axios.get(imageUrl, {
+      responseType: "arraybuffer", // Important for binary data
+    });
+
+    // Set the appropriate content-type
+    res.contentType(response.headers["content-type"]);
+
+    // Send the binary image data
+    res.send(response.data);
+  } catch (error) {
+    console.error("Error fetching image:", error.message);
+    res.status(500).send("Error fetching image");
+  }
+});
 app.use((req, res, next) => {
   res.status(404).json({ message: "End point not found" });
 });

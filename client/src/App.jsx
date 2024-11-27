@@ -7,13 +7,7 @@ import { Button } from "./components/ui/button";
 import { VideoPlayer } from "./components/VideoPlayer";
 import { IconRight } from "react-day-picker";
 function App() {
-  const [count, setCount] = useState(0);
-  const [date, setDate] = useState(new Date());
-
-  useEffect(() => {
-    console.log(date);
-  }, [date]);
-
+  const [globUser, setGlobUser] = useState(null)
   return (
     <>
       {/* <OAuth /> */}
@@ -25,7 +19,7 @@ function App() {
           {/* <Button className={"absolute top-4 right-4"}>
             
           </Button> */}
-          <OAuth style={{position:"absolute", top:"10px", right:"10px"}}/>
+          <OAuth style={{ position: "absolute", top: "10px", right: "10px" }} setGlobUser={setGlobUser} />
           {/* video componet and other main frame comps. will be render here */}
           <VideoPlayer style={{ margin: "20px 0 0 40px" }} />
         </main>

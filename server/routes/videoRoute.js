@@ -2,8 +2,25 @@ const express = require("express");
 const router = express.Router();
 const path = require("path");
 const fs = require("fs");
-router.get("/video/:id", (req, res) => {
+const { fetchUserAuthId } = require("../DB/DB");
+router.get("/video/:id", async (req, res) => {
   const videoId = req.params.id;
+
+  const authToken = req.query.authToken; // Get the authToken from the query string
+
+  // Verify the authToken (replace this with your actual logic)
+
+  if (!authToken) {
+    return res.status(401).send("Unauthorized: Invalid token");
+  }
+  const rows = await fetchUserAuthId(authToken);
+  if (!rows || !rows[0]) {
+    return res.status(401).send("Unauthorized: Invalid token");
+  }
+  if (rows[0].authId != authToken) {
+    return res.status(401).send("Unauthorized: Invalid token");
+  }
+
   console.log(videoId);
 
   const videoPath = path.resolve(__dirname, "..", "videos", `${videoId}.mp4`); // Adjust path to your video file
