@@ -23,20 +23,24 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const googleAuth = async (token) => {
-  const ticket = await client.verifyIdToken({
-    idToken: token,
-    audience: process.env.GOOGLE_CLIENT_ID,
-  });
-  const payload = ticket.getPayload();
-  const { sub, email, name, picture } = payload;
-  const authToken = sub;
-  console.log(`user ${name} verified`);
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const { sub, email, name, picture } = payload;
+    const authToken = sub;
+    console.log(`user ${name} verified`);
 
-  const rows = await insertUserAuthId(sub, email, name, picture);
+    const rows = await insertUserAuthId(sub, email, name, picture);
 
-  console.log("this is rows : " + rows);
+    console.log("this is rows : " + rows);
 
-  return { authToken, userInfo: { name, email, picture } };
+    return { authToken, userInfo: { name, email, picture } };
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 app.post("/auth/google/callback", async (req, res) => {

@@ -1,3 +1,4 @@
+import config from "@/config";
 import React, { useState } from "react";
 // import ReactPlayer from "react-player"; // need to uninstall
 export const VideoPlayer = ({style}) => {
@@ -9,7 +10,7 @@ export const VideoPlayer = ({style}) => {
       <video
 
         style={newStyle}
-        src={[`http://localhost:8020/video/${videoId}?authToken=${authToken}`]}
+        src={[`${config.apiBaseUrl}/video/${videoId}?authToken=${authToken}`]}
         controls={true}
       />
     </div>

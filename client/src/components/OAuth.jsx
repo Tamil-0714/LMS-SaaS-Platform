@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 // import {  } from "@radix-ui/react-popover";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import config from "@/config";
 
 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
@@ -12,7 +13,7 @@ const verifyAuthToken = async (authToken, setUser, setGlobUser) => {
     authorization: authToken,
   };
   try {
-    const res = await axios.get("http://localhost:8020/api/verify/auth", {
+    const res = await axios.get(`${config.apiBaseUrl}/api/verify/auth`, {
       headers: headers,
     });
     if (res.status === 200) {
@@ -65,7 +66,7 @@ const OAuth = ({ style, setGlobUser }) => {
     // Send the token to your backend for validation
     try {
       const res = await axios.post(
-        "http://localhost:8020/auth/google/callback",
+        `${config.apiBaseUrl}/auth/google/callback`,
         {
           token,
         },
@@ -137,7 +138,7 @@ const OAuth = ({ style, setGlobUser }) => {
                 onMouseLeave={() => setHover(false)}
               >
                 <img
-                  src={`http://localhost:8020/proxy-image?url=${user.picture}`}
+                  src={`${config.apiBaseUrl}/proxy-image?url=${user.picture}`}
                   alt="profile"
                   style={{
                     width: "40px",

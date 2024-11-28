@@ -4,8 +4,6 @@ const { fetchUserAuthId } = require("../DB/DB");
 const verifyToken = async (req, res, next) => {
   const token = req.headers.authorization;
   if (!token) {
-    console.log(req.headers);
-
     return res.status(403).json({ error: "No token provided" });
   }
   console.log(`token from server ${token}`);
