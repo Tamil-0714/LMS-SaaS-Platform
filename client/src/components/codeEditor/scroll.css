@@ -1,0 +1,17 @@
+/* Scrollbar Styling */
+.scrollable-container::-webkit-scrollbar {
+    height: 12px; /* Height of the scrollbar */
+  }
+  
+  .scrollable-container::-webkit-scrollbar-track {
+    background: #f0f0f0; /* Background color of the track */
+  }
+  
+  .scrollable-container::-webkit-scrollbar-thumb {
+    background: #888; /* Color of the thumb */
+  }
+  
+  .scrollable-container::-webkit-scrollbar-thumb:hover {
+    background: #555; /* Thumb color on hover */
+  }
+  

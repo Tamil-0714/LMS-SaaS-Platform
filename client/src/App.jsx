@@ -7,6 +7,7 @@ import { Button } from "./components/ui/button";
 import { VideoPlayer } from "./components/VideoPlayer";
 import { IconRight } from "react-day-picker";
 import HomeComponetn from "./components/home/HomeComponetn";
+import CodeEditor from "./components/codeEditor/CodeEditor";
 function App() {
   const [globUser, setGlobUser] = useState(null);
   return (
@@ -26,7 +27,8 @@ function App() {
           />
           {/* home componet and other main frame comps. will be render here */}
           {/* <VideoPlayer style={{ margin: "20px 0 0 40px" }} /> */}
-          <HomeComponetn />
+          {/* <HomeComponetn /> */}
+          <CodeEditor/>
         </main>
       </SidebarProvider>
     </>
