@@ -2,6 +2,11 @@ import React, { useEffect, useRef, useState } from "react";
 import Editor, { DiffEditor, useMonaco, loader } from "@monaco-editor/react";
 import { Button } from "@/components/ui/button";
 import "./scroll.css";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
 const LocalEditor = ({
   selectedLanguage,
   defaultValue,
@@ -42,9 +47,11 @@ const LocalEditor = ({
       <div
         className="btn-wrapper"
         style={{
-          position: "absolute",
-          left: "680px",
-          top: "5px",
+          position: "relative",
+          marginTop: "-44px",
+          left: "460px",
+          height: "42px",
+          // outline:"1px solid red"
         }}
       >
         <Button
@@ -57,40 +64,55 @@ const LocalEditor = ({
         </Button>
       </div>
       {/* <button></button> */}
-      <div
-        className="editor-wrapper"
+
+      <ResizablePanelGroup
+        direction="horizontal"
         style={{
-          marginLeft: "50px",
+          marginLeft: "-80px",
         }}
       >
-        <Editor
-          style={{
-            borderRadius: "50px",
-          }}
-          height="90vh"
-          width="40vw"
-          theme={theme}
-          language={selectedLanguage}
-          value={editorValue}
-          onMount={handleEditorDidMount}
-        />
-      </div>
-      {/* Optional: display output */}
+        <ResizablePanel>
+          <div
+            className="editor-wrapper"
+            style={{
+              border: "1px solid rgb(168 162 158)",
+              padding: "5px 10px",
+              marginRight: "20px",
+              borderRadius: "10px",
+            }}
+          >
+            <Editor
+              height="86vh"
+              width="100%"
+              theme={theme}
+              language={selectedLanguage}
+              value={editorValue}
+              onMount={handleEditorDidMount}
+            />
+          </div>
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel>
+          <div
+            className="output-wrapper scrollable-container"
+            style={{
+              marginLeft: "20px",
+              border: "1px solid rgb(168 162 158)",
+              height:"87vh",
+              width: "75%",
+              borderRadius: "10px",
+              overflowX: "auto",
+              backgroundColor: "rgb(61 61 65 / 18%)",
+              padding: "12px",
+            }}
+          >
+            <h4 style={{textAlign:"center"}}>output</h4>
+            <pre>{output}</pre>
+          </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
 
-      {output && (
-        <div
-          className="output-wrapper scrollable-container"
-          style={{
-            marginLeft: "20px",
-            width: "45%",
-            overflowX: "auto",
-            backgroundColor: "rgb(61 61 65 / 18%)",
-            padding: "12px",
-          }}
-        >
-          <pre>{output}</pre>
-        </div>
-      )}
+      {/* Optional: display output */}
     </div>
   );
 };
