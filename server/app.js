@@ -16,7 +16,7 @@ app.use(
     origin: "http://localhost:5173",
     methods: ["GET", "POST"],
     credentials: true,
-  })  
+  })
 );
 
 app.use(express.json());
@@ -55,6 +55,24 @@ app.post("/auth/google/callback", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Authentication failed" });
+  }
+});
+
+app.post("/runCode", verifyToken, async (req, res) => {
+  const { language, code } = req.body;
+  try {
+    const response = await axios.post("http://localhost:3000/execute", {
+      language,
+      code,
+    });
+
+    return res.status(200).json({ output: response.data.output }); // Return the output for further use
+  } catch (error) {
+    console.error(
+      "Error during code execution:",
+      error.response?.data || error.message
+    );
+    return res.status(500).json({ message: "Internal server error" });
   }
 });
 

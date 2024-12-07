@@ -9,18 +9,75 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import LocalEditor from "./LocalEditor";
+import config from "@/config";
+
+const verifyAuthToken = async (authToken, setUser, setGlobUser) => {
+  const headers = {
+    "Content-Type": "application/json",
+    authorization: authToken,
+  };
+  try {
+    const res = await axios.get(`${config.apiBaseUrl}/api/verify/auth`, {
+      headers: headers,
+    });
+    if (res.status === 200) {
+      const userData = res.data.user[0];
+      const verifiedUser = {
+        name: userData.google_name,
+        email: userData.email,
+        picture: userData.pictureURL,
+      };
+      setUser(verifiedUser);
+      setGlobUser(verifiedUser);
+      const signInButton = document.getElementById("googleSignInButton");
+      if (signInButton) {
+        signInButton.innerHTML = ""; // Clear the button's content
+      }
+      console.log(res.data);
+    }
+  } catch (error) {}
+};
 
 const executeCode = async (language, code, setOutput) => {
+  const headers = {
+    "Content-Type": "application/json",
+    authorization: localStorage.getItem("authToken"),
+  };
   try {
-    const response = await axios.post("http://localhost:3000/execute", {
-      language,
-      code,
-    });
+    const response = await axios.post(
+      `${config.apiBaseUrl}/runCode`,
+      {
+        language,
+        code,
+      },
+      { headers: headers }
+    );
+    console.log("status : ", response.status);
 
+    if (response.status == 403) {
+      setOutput(
+        "Un-Authorized acces to an proted end point , login to acces this future"
+      );
+      return;
+    }
     console.log("Execution Result:", response.data.output);
-    setOutput(response.data.output);
-    return response.data.output; // Return the output for further use
+    setOutput(response?.data?.output);
+    // return response.data.output; // Return the output for further use
   } catch (error) {
+    console.log("status : ", error.response.status);
+    // {
+    //   `<span style={{ color: "red" }}>
+    //     Un-Authorized acces to an proted end point,
+    //     <br />
+    //     login to acces this future
+    //   </span>`
+    // }
+    if (error.response.status == 403) {
+      setOutput(
+        "Un-Authorized acces to an proted end point\nlogin to acces this future"
+      );
+      return;
+    }
     console.error(
       "Error during code execution:",
       error.response?.data || error.message
@@ -71,7 +128,6 @@ const CodeEditor = () => {
       className="container"
       style={{
         width: "80vw",
-        height: "100vh",
       }}
     >
       {/* selector bar start*/}

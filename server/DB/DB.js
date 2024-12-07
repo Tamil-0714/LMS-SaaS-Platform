@@ -1,26 +1,48 @@
 const mysql = require("mysql2");
 
-function connectDB() {
-  const pool = mysql.createPool({
-    host: "localhost",
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: "Elearning",
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0,
-  });
-  return pool.promise();
-}
+// function connectDB() {
+//   const pool = mysql.createPool({
+//     host: "localhost",
+//     user: process.env.DB_USER,
+//     password: process.env.DB_PASSWORD,
+//     database: "Elearning",
+//     waitForConnections: true,
+//     connectionLimit: 10,
+//     queueLimit: 0,
+//   });
+//   return pool.promise();
+// }
+
+const pool = mysql.createPool({
+  host: "localhost",
+  user: "root",
+  password: "TooJoo_1967",
+  database: "Elearning",
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+});
+
+// async function queryDB(sql, params) {
+//   try {
+//     const connection = await connectDB();
+//     const [rows] = await connection.query(sql, params);
+//     connection.releaseConnection();
+//     return rows;
+//   } catch (error) {
+//     throw error;
+//   }
+// }
 
 async function queryDB(sql, params) {
+  const connection = await pool.promise().getConnection(); // Get a connection from the pool
   try {
-    const connection = await connectDB();
     const [rows] = await connection.query(sql, params);
-    connection.releaseConnection();
     return rows;
   } catch (error) {
     throw error;
+  } finally {
+    connection.release(); // Release the connection back to the pool
   }
 }
 

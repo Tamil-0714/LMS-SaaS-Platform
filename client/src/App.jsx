@@ -8,6 +8,7 @@ import { VideoPlayer } from "./components/VideoPlayer";
 import { IconRight } from "react-day-picker";
 import HomeComponetn from "./components/home/HomeComponetn";
 import CodeEditor from "./components/codeEditor/CodeEditor";
+import Course from "./components/courses/Course";
 
 function App() {
   const [globUser, setGlobUser] = useState(null);
@@ -40,15 +41,17 @@ function App() {
             style={{ position: "absolute", top: "10px", right: "10px" }}
             setGlobUser={setGlobUser}
           />
-          {currentComponet === "home" ? (
+          <Course/>
+          {/* {currentComponet === "home" ? (
             <HomeComponetn />
           ) : currentComponet === "codePlayGround" ? (
             <CodeEditor />
           ) : currentComponet === "course" ? (
-            <VideoPlayer style={{ margin: "20px 0 0 40px" }} />
+            // <VideoPlayer style={{ margin: "20px 0 0 40px" }} />
+            <Course />
           ) : (
             <div>no componet choosed</div>
-          )}
+          )} */}
           {/* home componet and other main frame comps. will be render here */}
         </main>
       </SidebarProvider>

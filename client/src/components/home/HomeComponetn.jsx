@@ -2,7 +2,7 @@ import React from "react";
 import HomeButton from "./HomeButton";
 import Top from "./Top";
 import HomeToy from "./HomeToy";
-
+import { ReactTyped } from "react-typed"; 
 const HomeComponetn = () => {
   return (
     <div>
@@ -27,8 +27,8 @@ const HomeComponetn = () => {
             fontSize: "24px",
           }}
         >
-          "Discover a world of learning—everything you need to elevate your
-          skills, all in one place."
+           <ReactTyped showCursor={false} strings={[`"Discover a world of learning—everything you need to elevate your skills, all in one place."`]} typeSpeed={20} />
+          
         </h1>
       </div>
       <div

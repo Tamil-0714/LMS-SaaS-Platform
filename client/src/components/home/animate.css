@@ -1,0 +1,16 @@
+/* Animation for wave-like movement */
+@keyframes waveMotion {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.wave-animation {
+  animation: waveMotion 4s infinite ease-out;
+}

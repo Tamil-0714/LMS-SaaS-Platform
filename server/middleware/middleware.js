@@ -24,6 +24,8 @@ const verifyToken = async (req, res, next) => {
      */
     req.user = rows;
     next();
+  } else {
+    return res.status(403).json({ error: "Invalid Token provided" });
   }
 
   // Verify the TOkern here

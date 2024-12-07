@@ -1,11 +1,14 @@
 import React from "react";
 
+import "./animate.css"
+
 const HomeToy = () => {
   return (
     <>
       <svg
         width="501.3"
         height="406"
+        className="wave-animation"
         viewBox="0 0 557 451"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"

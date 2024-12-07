@@ -98,15 +98,16 @@ const LocalEditor = ({
             style={{
               marginLeft: "20px",
               border: "1px solid rgb(168 162 158)",
-              height:"87vh",
+              height: "87vh",
               width: "75%",
               borderRadius: "10px",
               overflowX: "auto",
               backgroundColor: "rgb(61 61 65 / 18%)",
               padding: "12px",
+              resize: "vertical",
             }}
           >
-            <h4 style={{textAlign:"center"}}>output</h4>
+            <h4 style={{ textAlign: "center" }}>output</h4>
             <pre>{output}</pre>
           </div>
         </ResizablePanel>
