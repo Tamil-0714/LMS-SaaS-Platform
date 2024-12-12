@@ -104,10 +104,12 @@ const LocalEditor = ({
               overflowX: "auto",
               backgroundColor: "rgb(61 61 65 / 18%)",
               padding: "12px",
+              // position:"relative", 
               resize: "vertical",
             }}
           >
             <h4 style={{ textAlign: "center" }}>output</h4>
+            {/* <Button>clear</Button> */}
             <pre>{output}</pre>
           </div>
         </ResizablePanel>
