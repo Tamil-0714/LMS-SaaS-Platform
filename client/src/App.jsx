@@ -41,8 +41,8 @@ function App() {
             style={{ position: "absolute", top: "10px", right: "10px" }}
             setGlobUser={setGlobUser}
           />
-          {/* <Course/> */}
-          {currentComponet === "home" ? (
+          <Course/>
+          {/* {currentComponet === "home" ? (
             <HomeComponetn />
           ) : currentComponet === "codePlayGround" ? (
             <CodeEditor />
@@ -51,7 +51,7 @@ function App() {
             <Course />
           ) : (
             <div>no componet choosed</div>
-          )}
+          )} */}
           {/* home componet and other main frame comps. will be render here */}
         </main>
       </SidebarProvider>

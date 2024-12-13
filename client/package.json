@@ -28,6 +28,7 @@
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",
     "react-resizable-panels": "^2.1.7",
+    "react-spinners": "^0.15.0",
     "react-typed": "^2.0.12",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7"

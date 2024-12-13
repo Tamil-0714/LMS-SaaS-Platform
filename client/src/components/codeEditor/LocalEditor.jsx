@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import Editor, { DiffEditor, useMonaco, loader } from "@monaco-editor/react";
+// import ClipLoader from "react-spinners/ClipLoader";
 import { Button } from "@/components/ui/button";
 import "./scroll.css";
 import {
@@ -7,6 +8,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import { RingLoader } from "react-spinners";
 const LocalEditor = ({
   selectedLanguage,
   defaultValue,
@@ -14,6 +16,7 @@ const LocalEditor = ({
   theme,
 }) => {
   const [editorValue, setEditorValue] = useState(defaultValue);
+  let [outputLoading, setOutputLoading] = useState(false);
   const [output, setOutput] = useState("");
   const editorRef = useRef(null);
 
@@ -29,12 +32,16 @@ const LocalEditor = ({
   }
 
   async function showOutput() {
+    setOutput("");
+    setOutputLoading(true);
     console.log(editorRef.current.getValue());
+
     await executeCode(
       selectedLanguage,
       editorRef.current.getValue(),
       setOutput
     );
+    setOutputLoading(false);
   }
 
   return (
@@ -104,13 +111,32 @@ const LocalEditor = ({
               overflowX: "auto",
               backgroundColor: "rgb(61 61 65 / 18%)",
               padding: "12px",
-              // position:"relative", 
+              position: "relative",
               resize: "vertical",
             }}
           >
             <h4 style={{ textAlign: "center" }}>output</h4>
             {/* <Button>clear</Button> */}
-            <pre>{output}</pre>
+            <pre>
+              <div
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                }}
+              >
+                <RingLoader
+                  color={"#ffffff"}
+                  loading={outputLoading}
+                  // cssOverride={override}
+                  size={150}
+                  aria-label="Loading Spinner"
+                  data-testid="loader"
+                />
+              </div>
+              {output}
+            </pre>
           </div>
         </ResizablePanel>
       </ResizablePanelGroup>

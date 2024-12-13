@@ -94,7 +94,42 @@ async function fetchUserAuthId(id) {
   }
 }
 
+// async function insertDummy(
+//   courseId,
+//   course_name,
+//   course_type,
+//   course_description,
+//   courseThumbnail
+// ) {
+//   try {
+//     const query = `INSERT INTO course (course_id, course_name, course_type, course_description, course_thumbnail) VALUES (?, ?, ?, ?, ?)`;
+//     const params = [
+//       courseId,
+//       course_name,
+//       course_type,
+//       course_description,
+//       courseThumbnail,
+//     ];
+//     const rows = await queryDB(query, params);
+//     return rows;
+//   } catch (error) {
+//     console.error(error);
+//   }
+// }
+
+async function fetchCourses() {
+  try {
+    const query = "SELECT * FROM course";
+    const params = [];
+    const rows = await queryDB(query, params);
+    return rows;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
 module.exports = {
   insertUserAuthId,
+  fetchCourses,
   fetchUserAuthId,
 };

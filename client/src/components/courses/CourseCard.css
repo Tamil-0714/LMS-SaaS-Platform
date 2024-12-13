@@ -1,0 +1,11 @@
+:root {
+  --clr-green: #01c3a8;
+}
+.card {
+  max-width: 20rem;
+  min-height: 20rem;
+  width: 100%;
+  box-shadow: 1px 12px 25px rgb(0 0 0 / 78%);
+  border-radius: 2.25rem;
+  background: #151419 100%;
+}
