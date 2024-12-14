@@ -19,14 +19,25 @@ import {
 } from "@/components/ui/select";
 // import { useDialog } from "radix-ui/react-dialog";
 // import { Label } from "@/components/ui/label";
-const CourseNav = () => {
+const CourseNav = ({ courseMetaData, updateFilter, clearFilter }) => {
   const [open, setOpen] = useState(false);
   const [sortBy, setSortBy] = useState(false);
   const [orderBy, setOrderBy] = useState(false);
   const handleApplyFilter = () => {
     setOpen(false);
+    if (sortBy === "category") {
+      updateFilter("category", "", orderBy);
+    } else {
+      updateFilter(sortBy, orderBy);
+    }
     console.log(sortBy);
     console.log(orderBy);
+  };
+  const handleClearFilter = () => {
+    setOpen(false);
+    setSortBy(false);
+    setOrderBy(false);
+    clearFilter();
   };
   return (
     <div className="course-navBar">
@@ -53,31 +64,68 @@ const CourseNav = () => {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Select onValueChange={setSortBy}>
+                <Select
+                  onValueChange={setSortBy}
+                  value={sortBy ? sortBy : undefined}
+                  key={sortBy}
+                >
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Sort By" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="price">Price</SelectItem>
                     <SelectItem value="rating">Rating</SelectItem>
-                    <SelectItem value="uploadTime">Upload time</SelectItem>
+                    <SelectItem value="category">Category</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Select onValueChange={setOrderBy}>
+                <Select
+                  onValueChange={setOrderBy}
+                  value={orderBy ? orderBy : undefined}
+                  key={orderBy}
+                >
                   <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Order By" />
+                    <SelectValue
+                      placeholder={
+                        sortBy === "category" ? "select Category" : "Order By"
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ascending">Ascending</SelectItem>
-                    <SelectItem value="descending">Descending </SelectItem>
+                    {sortBy === "category" ? (
+                      <>
+                        {courseMetaData.map((ele, index) => {
+                          return (
+                            <>
+                              <SelectItem value={ele.course_type} key={index}>
+                                {ele.course_type}
+                              </SelectItem>
+                            </>
+                          );
+                        })}
+                      </>
+                    ) : (
+                      <>
+                        <SelectItem value="ascending">Ascending</SelectItem>
+                        <SelectItem value="descending">Descending </SelectItem>
+                      </>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleApplyFilter}>Apply filter</Button>
+              {!orderBy && !sortBy ? (
+                <>
+                  <Button onClick={handleApplyFilter}>Apply filter</Button>
+                </>
+              ) : (
+                <>
+                  <Button onClick={handleClearFilter}>Clear filter</Button>
+                  <Button onClick={handleApplyFilter}>Apply filter</Button>
+                </>
+              )}
             </DialogFooter>
           </DialogContent>
         </Dialog>

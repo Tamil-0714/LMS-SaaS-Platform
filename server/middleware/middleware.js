@@ -6,8 +6,6 @@ const verifyToken = async (req, res, next) => {
   if (!token) {
     return res.status(403).json({ error: "No token provided" });
   }
-  console.log(`token from server ${token}`);
-
   const rows = await fetchUserAuthId(token);
   if (rows && rows[0] && rows[0].authId == token) {
     /*

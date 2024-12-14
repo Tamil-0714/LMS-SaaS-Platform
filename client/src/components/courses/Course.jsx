@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
-
 import CourseNav from "./CourseNav";
-import CourseCard from "./CourseCard";
 import axios from "axios";
 import config from "@/config";
+import CourseList from "./CourseList";
 
 const Course = () => {
   const [courseMetaData, setCourseMetaData] = useState(null);
+  const [backUPCourseMetaData, setBackUpCourseMetaData] = useState(null);
+
   useEffect(() => {
     const fetchCourse = async () => {
       const headers = {
@@ -18,46 +19,72 @@ const Course = () => {
         const res = await axios.get(url, { headers: headers });
         if (res.status === 200 && res.data) {
           setCourseMetaData(res.data);
+          setBackUpCourseMetaData(res.data); // Set the backup data
         }
-      } catch (error) {}
+      } catch (error) {
+        console.error("Error fetching courses:", error);
+      }
     };
     fetchCourse();
   }, []);
+
+  const updateFilter = (sortBy, orderBy, category = undefined) => {
+    console.log("Filter triggered");
+
+    if (!backUPCourseMetaData) {
+      setBackUpCourseMetaData([...courseMetaData]);
+    }
+
+    let dataToFilter = [...(backUPCourseMetaData || courseMetaData)];
+
+    if (sortBy === "category" && category) {
+      // Filter by category
+      const filteredCourses = dataToFilter.filter(
+        (course) => course.course_type === category
+      );
+      setCourseMetaData(filteredCourses);
+      return;
+    }
+
+    if (sortBy === "price") {
+      // Sort by price
+      const sortedCourses = dataToFilter.sort((a, b) => {
+        return orderBy === "ascending" ? a.price - b.price : b.price - a.price;
+      });
+      setCourseMetaData(sortedCourses);
+      return;
+    }
+
+    // Reset to original data if no valid filter is applied
+    setCourseMetaData(backUPCourseMetaData);
+  };
+  const clearFilter = () => {
+    if (backUPCourseMetaData) {
+      setCourseMetaData([...backUPCourseMetaData]);
+    } else {
+      console.warn("No backupdata");
+    }
+  };
+
   return (
     <>
-      {/* {
-    "course_id": "d340e9ec80ff737e",
-    "course_name": "Figma Design",
-    "course_type": "Designing",
-    "course_description": "Learn to create UI/UX designs with Figma.",
-    "course_thumbnail": "/images/courseThumbnail/d340e9ec80ff737e"
-} */}
-      <CourseNav />
+      <CourseNav
+        courseMetaData={courseMetaData}
+        updateFilter={updateFilter}
+        clearFilter={clearFilter}
+      />
       {courseMetaData === null ? (
         <p>Loading courses...</p>
       ) : (
         <div
-          className="course-list"
+          className="courses-wrapper"
           style={{
-            display: "flex",
-            gap: "20px",
-            flexWrap: "wrap",
+            marginTop: "10px",
+            width: "1400px",
+            userSelect: "none",
           }}
         >
-          {/* If courseMetaData is an array, map over it and render CourseCard for each item */}
-          {courseMetaData.length > 0 ? (
-            courseMetaData.map((course, index) => (
-              <CourseCard
-                key={index}
-                courseType={course.course_type}
-                courseDes={course.course_description}
-                courseTitle={course.course_name}
-                courseThumbnai={course.course_thumbnail}
-              />
-            ))
-          ) : (
-            <p>No courses found.</p> // If no courses are returned
-          )}
+          <CourseList courseMetaData={courseMetaData} />
         </div>
       )}
     </>

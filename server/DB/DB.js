@@ -99,16 +99,18 @@ async function fetchUserAuthId(id) {
 //   course_name,
 //   course_type,
 //   course_description,
-//   courseThumbnail
+//   courseThumbnail,
+//   price
 // ) {
 //   try {
-//     const query = `INSERT INTO course (course_id, course_name, course_type, course_description, course_thumbnail) VALUES (?, ?, ?, ?, ?)`;
+//     const query = `INSERT INTO course (course_id, course_name, course_type, course_description, course_thumbnail, price) VALUES (?, ?, ?, ?, ?, ?)`;
 //     const params = [
 //       courseId,
 //       course_name,
 //       course_type,
 //       course_description,
 //       courseThumbnail,
+//       price
 //     ];
 //     const rows = await queryDB(query, params);
 //     return rows;
@@ -132,4 +134,5 @@ module.exports = {
   insertUserAuthId,
   fetchCourses,
   fetchUserAuthId,
+  // insertDummy
 };

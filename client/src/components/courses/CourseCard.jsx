@@ -9,7 +9,7 @@ const CourseCard = ({ courseType, courseTitle, courseDes, courseThumbnai }) => {
         className="card"
         style={{
           maxWidth: "20rem",
-          minHeight: "25rem",
+          maxHeight: "25rem",
           width: "100%",
           margin: "10px",
           boxShadow: "1px 12px 25px rgb(0 0 0 / 78%)",
@@ -17,14 +17,17 @@ const CourseCard = ({ courseType, courseTitle, courseDes, courseThumbnai }) => {
           background: "#151419 100%",
         }}
       >
-        <div className="card-header">
+        <div className="card-header" style={{
+          // outline:"1px solid red",
+          minHeight:"196px"
+        }}>
           <img
             style={{
               width: "100%",
               borderRadius: "2.25rem 2.25rem  0 0",
             }}
             src={`http://localhost:8020${courseThumbnai}`}
-            alt=""
+            alt="course thumbnail"
           />
         </div>
 
@@ -66,7 +69,7 @@ const CourseCard = ({ courseType, courseTitle, courseDes, courseThumbnai }) => {
           className="card-footer"
           style={{
             // outline:"1px solid red",
-            height: "100px",
+            height: "77px",
             borderRadius: "0 0 2.25rem 2.25rem ",
             display: "flex",
             alignItems: "flex-end",
@@ -76,7 +79,7 @@ const CourseCard = ({ courseType, courseTitle, courseDes, courseThumbnai }) => {
           <div
             className="btn-container"
             style={{
-              margin: "20px 10px 0 0",
+              margin: "20px 20px 0 0",
             }}
           >
             <Button>Enroll Now</Button>
