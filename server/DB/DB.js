@@ -119,6 +119,7 @@ async function fetchUserAuthId(id) {
 //   }
 // }
 
+
 async function fetchCourses() {
   try {
     const query = "SELECT * FROM course";

@@ -77,7 +77,10 @@ export function AppSidebar({
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <a
-                      href={item.url}
+                      // href={item.url}
+                      style={{
+                        cursor: "pointer",
+                      }}
                       onClick={
                         item.clickerFunction ? item.clickerFunction : undefined
                       }

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +23,19 @@ const CourseNav = ({ courseMetaData, updateFilter, clearFilter }) => {
   const [open, setOpen] = useState(false);
   const [sortBy, setSortBy] = useState(false);
   const [orderBy, setOrderBy] = useState(false);
+  const [courseCategory, setCourseCategory] = useState([]);
+
+  useEffect(() => {
+    let tempArr = [];
+    console.log(courseMetaData);
+    const uniqueCourseTypes = [
+      ...new Set(courseMetaData?.map((course) => course.course_type)),
+    ];
+    setCourseCategory(uniqueCourseTypes);
+  }, [courseMetaData]);
+  useEffect(() => {
+    console.log("tjis is sort by", sortBy);
+  }, [sortBy]);
   const handleApplyFilter = () => {
     setOpen(false);
     if (sortBy === "category") {
@@ -33,6 +46,10 @@ const CourseNav = ({ courseMetaData, updateFilter, clearFilter }) => {
     console.log(sortBy);
     console.log(orderBy);
   };
+  const handleSortBy = (e)=>{
+    setSortBy(e);
+    setOrderBy(false)
+  }
   const handleClearFilter = () => {
     setOpen(false);
     setSortBy(false);
@@ -65,7 +82,7 @@ const CourseNav = ({ courseMetaData, updateFilter, clearFilter }) => {
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Select
-                  onValueChange={setSortBy}
+                  onValueChange={handleSortBy}
                   value={sortBy ? sortBy : undefined}
                   key={sortBy}
                 >
@@ -95,11 +112,11 @@ const CourseNav = ({ courseMetaData, updateFilter, clearFilter }) => {
                   <SelectContent>
                     {sortBy === "category" ? (
                       <>
-                        {courseMetaData.map((ele, index) => {
+                        {courseCategory.map((ele, index) => {
                           return (
                             <>
-                              <SelectItem value={ele.course_type} key={index}>
-                                {ele.course_type}
+                              <SelectItem value={ele} key={index}>
+                                {ele}
                               </SelectItem>
                             </>
                           );

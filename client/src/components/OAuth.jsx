@@ -4,6 +4,7 @@ import { Button } from "./ui/button";
 // import {  } from "@radix-ui/react-popover";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import config from "@/config";
+import { Input } from "./ui/input";
 
 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
@@ -36,27 +37,41 @@ const verifyAuthToken = async (authToken, setUser, setGlobUser) => {
 
 const OAuth = ({ style, setGlobUser }) => {
   const [user, setUser] = useState(null);
+  const [guestId, setGuestId] = useState("");
+  const [guestLogin, setGuestLogin] = useState(false);
+
   useEffect(() => {
     const authToken = localStorage.getItem("authToken");
+    console.log("thisi is auth otke", authToken);
+
     if (authToken) {
       console.log("its presented");
 
       verifyAuthToken(authToken, setUser, setGlobUser);
     }
-  }, []);
+  }, [guestLogin]);
 
   useEffect(() => {
     if (!user) {
-      window.google.accounts.id.initialize({
-        client_id: clientId,
-        callback: handleCredentialResponse, // Called on successful login
-      });
+      try {
+        window?.google?.accounts?.id?.initialize({
+          client_id: clientId,
+          callback: handleCredentialResponse, // Called on successful login
+        });
 
-      // Render the Google Sign-In button
-      window.google.accounts.id.renderButton(
-        document.getElementById("googleSignInButton"),
-        { type: "standard", theme: "filled_black", width: "200", size: "large" }
-      );
+        // Render the Google Sign-In button
+        window.google.accounts.id.renderButton(
+          document.getElementById("googleSignInButton"),
+          {
+            type: "standard",
+            theme: "filled_black",
+            width: "200",
+            size: "large",
+          }
+        );
+      } catch (error) {
+        console.error(error);
+      }
     }
   }, [user]);
 
@@ -98,7 +113,15 @@ const OAuth = ({ style, setGlobUser }) => {
       );
     }
   };
+  const handleGuestLogin = () => {
+    console.log("changed");
+    localStorage.setItem("authToken", guestId);
 
+    setGuestLogin(!guestLogin);
+  };
+  const handleInputChange = (event) => {
+    setGuestId(event.target.value);
+  };
   const handleLogout = () => {
     localStorage.removeItem("authToken");
     setUser(null); // Clear user session
@@ -122,7 +145,44 @@ const OAuth = ({ style, setGlobUser }) => {
   return (
     <div style={style}>
       {!user ? (
-        <div id="googleSignInButton"></div>
+        <div
+          style={{
+            display: "flex",
+            gap: "30px",
+            alignItems: "center",
+          }}
+        >
+          <>
+            <Popover>
+              <PopoverTrigger>
+                <div
+                  style={{
+                    border: "1px solid",
+                    padding: "12px",
+                    borderRadius: "8px",
+                  }}
+                >
+                  Guest login
+                </div>
+              </PopoverTrigger>
+              <PopoverContent style={{ width: "340px" }}>
+                <div className="flex w-full max-w-sm items-center space-x-2">
+                  <Input
+                    type="text"
+                    placeholder="Guest Id"
+                    value={guestId}
+                    onChange={handleInputChange}
+                  />
+                  <Button type="button" onClick={handleGuestLogin}>
+                    Login
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </>
+
+          <div id="googleSignInButton"></div>
+        </div>
       ) : (
         <>
           <Popover>

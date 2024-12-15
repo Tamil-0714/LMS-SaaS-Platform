@@ -60,7 +60,14 @@ const CourseList = ({ courseMetaData }) => {
           <CarouselContent>
             {courseMetaData.length > 0 ? (
               courseMetaData.map((course, index) => (
-                <CarouselItem className="basis-1/4" key={index}>
+                <CarouselItem
+                  className={
+                    courseMetaData.length > 4
+                      ? `basis-1/4`
+                      : `basis-1/${courseMetaData.length}`
+                  }
+                  key={index}
+                >
                   <Card
                     style={{
                       width: "300px",

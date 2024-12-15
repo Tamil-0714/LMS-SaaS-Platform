@@ -69,7 +69,7 @@ const Course = () => {
   return (
     <>
       <CourseNav
-        courseMetaData={courseMetaData}
+        courseMetaData={backUPCourseMetaData}
         updateFilter={updateFilter}
         clearFilter={clearFilter}
       />

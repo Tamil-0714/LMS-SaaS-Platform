@@ -1,0 +1,66 @@
+{
+  "results": [
+    {
+      "gender": "female",
+      "name": {
+        "title": "Mrs",
+        "first": "Elisa",
+        "last": "Hernández"
+      },
+      "location": {
+        "street": {
+          "number": 438,
+          "name": "Calle de Arturo Soria"
+        },
+        "city": "Almería",
+        "state": "Cataluña",
+        "country": "Spain",
+        "postcode": 26839,
+        "coordinates": {
+          "latitude": "-36.0097",
+          "longitude": "114.4620"
+        },
+        "timezone": {
+          "offset": "-6:00",
+          "description": "Central Time (US & Canada), Mexico City"
+        }
+      },
+      "email": "elisa.hernandez@example.com",
+      "login": {
+        "uuid": "46930516-24d3-4498-b113-ed6f6e1b3a59",
+        "username": "bluewolf838",
+        "password": "baby",
+        "salt": "q1nqLI9f",
+        "md5": "8ced8f107a915b02abd6aef306cb40e8",
+        "sha1": "b25d5bebbb3d4f99fcf83ff9ac9f14245485d9e5",
+        "sha256": "c0dd60611f35d3591fb3e74003b28aaa7cd07ae2553912157f83080ac1da5925"
+      },
+      "dob": {
+        "date": "1966-07-08T14:45:27.032Z",
+        "age": 58
+      },
+      "registered": {
+        "date": "2021-04-27T17:57:15.787Z",
+        "age": 3
+      },
+      "phone": "980-716-363",
+      "cell": "679-954-452",
+      "id": {
+        "name": "DNI",
+        "value": "74869606-A"
+      },
+      "picture": {
+        "large": "https://randomuser.me/api/portraits/women/40.jpg",
+        "medium": "https://randomuser.me/api/portraits/med/women/40.jpg",
+        "thumbnail": "https://randomuser.me/api/portraits/thumb/women/40.jpg"
+      },
+      "nat": "ES"
+    }
+  ],
+  "info": {
+    "seed": "d20adb37ebaa2f78",
+    "results": 1,
+    "page": 1,
+    "version": "1.4"
+  }
+}
