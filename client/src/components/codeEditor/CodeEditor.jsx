@@ -177,6 +177,7 @@ const CodeEditor = () => {
         defaultValue={editorContent}
         executeCode={executeCode}
         theme={selectedTheme}
+       
       />
     </div>
   );

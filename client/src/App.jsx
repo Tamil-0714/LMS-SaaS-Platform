@@ -42,7 +42,8 @@ function App() {
             setGlobUser={setGlobUser}
           />
           {/* <Course/> */}
-          {currentComponet === "home" ? (
+          <CodeEditor />
+          {/* {currentComponet === "home" ? (
             <HomeComponetn />
           ) : currentComponet === "codePlayGround" ? (
             <CodeEditor />
@@ -51,7 +52,7 @@ function App() {
             <Course />
           ) : (
             <div>no componet choosed</div>
-          )}
+          )} */}
           {/* home componet and other main frame comps. will be render here */}
         </main>
       </SidebarProvider>

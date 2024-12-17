@@ -5,9 +5,10 @@ const videoRoute = require("./routes/videoRoute");
 const { OAuth2Client } = require("google-auth-library");
 const axios = require("axios");
 const crypto = require("crypto");
-const { insertUserAuthId,  fetchCourses } = require("./DB/DB");
+const { insertUserAuthId, fetchCourses } = require("./DB/DB");
 const path = require("path");
 const fs = require("fs");
+const multer = require("multer");
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 require("dotenv").config();
@@ -28,6 +29,10 @@ app.use(
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+const upload = multer({
+  storage: multer.memoryStorage(), // Store files in memory as Buffer
+});
 
 function generateUUID() {
   return crypto.randomBytes(8).toString("hex"); // 8 bytes = 16 hex characters
@@ -113,7 +118,37 @@ app.get("/images/courseThumbnail/:courseId", (req, res) => {
   res.sendFile(imagePath);
 });
 
+app.post("/imgToCode", upload.single("file"), async (req, res) => {
+  // "file" matches the key in FormData.append("file", file)
 
+  // Check if a file was uploaded
+  if (!req.file) {
+    return res.status(400).json({ message: "No file uploaded" });
+  }
+
+  // Extract the MIME type
+  const mimeType = req.file.mimetype;
+
+  // Convert the file buffer to a Base64-encoded string
+  const base64String = req.file.buffer.toString("base64");
+
+  // Respond with the Base64 string and MIME type
+  const body = {
+    mimeType: mimeType,
+    base64String: base64String,
+  };
+  try {
+    const result = await axios.post(
+      "http://localhost:3030/proxyImgToCode",
+      body
+    );
+    console.log("Res from proxy : ", result.data);
+  } catch (error) {
+    console.error(error);
+  }
+
+  res.status(200).json({ message: "success" });
+});
 
 app.get("/video/:id", videoRoute);
 

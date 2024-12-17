@@ -1,0 +1,80 @@
+# Node modules
+node_modules/
+videos/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Dependency directories
+jspm_packages/
+
+# dotenv environment variables
+.env
+.env.local
+.env.*.local
+
+# Editor and IDE files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Build output
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Temporary files
+tmp/
+temp/
+
+# Debugger output
+.vscode/launch.json
+
+# Test output
+coverage/
+.nyc_output/
+
+# Yarn Integrity
+.yarn-integrity
+
+# Optional npm cache directory
+.npm
+
+# ESLint cache
+.eslintcache
+
+# Parcel-bundler cache (if used)
+.cache/
+
+# TypeScript
+*.d.ts
+
+# Optional REPL history
+.node_repl_history
+
+# GitHub files
+*.orig
+
+# Ignore public/uploads if storing user uploads
+public/uploads/
+
+# Ignore custom files
+*.env.backup
+local_settings.py
