@@ -18,6 +18,7 @@ import { RingLoader } from "react-spinners";
 import { Input } from "../ui/input";
 import { FileUpload } from "./FileUpload";
 import config from "@/config";
+import axios from "axios";
 const LocalEditor = ({
   selectedLanguage,
   defaultValue,
@@ -25,8 +26,11 @@ const LocalEditor = ({
   theme,
 }) => {
   const [editorValue, setEditorValue] = useState(defaultValue);
+  const [finalImgToCode, setfinalImgToCode] = useState("");
+  const [codeLoading, setCodeLoading] = useState(false);
   let [outputLoading, setOutputLoading] = useState(false);
   const [output, setOutput] = useState("");
+  const [triggerPopover, setTriggerPopover] = useState(false);
   const editorRef = useRef(null);
 
   // Update editor content when defaultValue changes
@@ -36,6 +40,9 @@ const LocalEditor = ({
     setEditorValue(defaultValue);
   }, [defaultValue]);
 
+  useEffect(() => {
+    setEditorValue(finalImgToCode);
+  }, [finalImgToCode]);
   function handleEditorDidMount(editor) {
     editorRef.current = editor;
   }
@@ -52,8 +59,13 @@ const LocalEditor = ({
     );
     setOutputLoading(false);
   }
+  const handlePopoverOpen = () => {
+    setTriggerPopover(!triggerPopover);
+  };
 
   const imgToCode = async (file) => {
+    setCodeLoading(!codeLoading);
+    setTriggerPopover(!triggerPopover);
     if (!file) {
       alert("No file selected!");
       return;
@@ -63,14 +75,26 @@ const LocalEditor = ({
     formData.append("file", file);
 
     try {
-      const response = await fetch(`${config.apiBaseUrl}/imgToCode`, {
-        method: "POST",
-        body: formData, // Send the file
-      });
+      const response = await axios.post(
+        `${config.apiBaseUrl}/imgToCode`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
-      if (response.ok) {
-        const result = await response.json();
-        alert(`File uploaded successfully: ${result.message}`);
+      if (response.status === 200) {
+        console.log(`File uploaded successfully:`);
+        const resRes = response.data;
+        const result = resRes
+          .replace(/^```.*\n/g, "") // Remove the opening code block markers
+          .replace(/^\/\/ Language: .*\n/g, "") // Remove the "Language" comment
+          .replace(/```$/g, "");
+        const finalCodeRes = result.replace(/```/g, "");
+        setfinalImgToCode(finalCodeRes);
+        setCodeLoading(false);
       } else {
         alert("Failed to upload file.");
       }
@@ -82,7 +106,39 @@ const LocalEditor = ({
 
   return (
     <>
-      <Popover>
+      {codeLoading ? (
+        <>
+          <div
+            style={{
+              width: "100vw",
+              height: "100vh",
+              backgroundColor: "hsla(0, 0%, 0%, 0.51)",
+              position: "absolute",
+              zIndex: "991",
+              left: "0",
+              top: "0",
+            }}
+          >
+            <RingLoader
+              color={"#ffffff"}
+              loading={codeLoading}
+              // cssOverride={override}
+              size={150}
+              style={{
+                position: "relative",
+                top: "40%",
+                left: "30%",
+                transform: "translate(-50%, -50%)",
+              }}
+              aria-label="Loading Spinner"
+              data-testid="loader"
+            />
+          </div>
+        </>
+      ) : (
+        <></>
+      )}
+      <Popover open={triggerPopover}>
         <PopoverTrigger
           className="athandaithu"
           style={{
@@ -99,7 +155,7 @@ const LocalEditor = ({
             }}
           >
             <Button
-              // onClick={imgToCode}
+              onClick={handlePopoverOpen}
               style={{
                 height: "40px",
               }}
@@ -114,7 +170,7 @@ const LocalEditor = ({
           }}
         >
           <div className="file-upload-container">
-            <FileUpload imgProcessFun={imgToCode}/>
+            <FileUpload imgProcessFun={imgToCode} />
           </div>
         </PopoverContent>
       </Popover>

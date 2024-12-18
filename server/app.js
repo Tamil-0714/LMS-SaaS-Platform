@@ -143,11 +143,10 @@ app.post("/imgToCode", upload.single("file"), async (req, res) => {
       body
     );
     console.log("Res from proxy : ", result.data);
+    res.status(200).send(result.data);
   } catch (error) {
     console.error(error);
   }
-
-  res.status(200).json({ message: "success" });
 });
 
 app.get("/video/:id", videoRoute);
