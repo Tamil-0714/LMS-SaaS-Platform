@@ -1,12 +1,12 @@
 import React from "react";
 import { Button } from "../ui/button";
-// import "./CourseCard.css"; // Optional CSS file for styles
+
 
 const CourseCard = ({ courseType, courseTitle, courseDes, courseThumbnai }) => {
   return (
     <section>
       <div
-        className="card"
+        className="ennadaithuvaalka"
         style={{
           maxWidth: "20rem",
           maxHeight: "25rem",
@@ -82,7 +82,7 @@ const CourseCard = ({ courseType, courseTitle, courseDes, courseThumbnai }) => {
               margin: "20px 20px 0 0",
             }}
           >
-            <Button>Enroll Now</Button>
+            <Button>Enroll Lter</Button>
           </div>
         </div>
       </div>

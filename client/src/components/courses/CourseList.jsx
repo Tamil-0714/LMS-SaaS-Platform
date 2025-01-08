@@ -15,8 +15,9 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-
+import "./CourseCard.css"; // Optional CSS file for styles
 import { Button } from "../ui/button";
+import StarRating from "./starRating";
 const CourseList = ({ courseMetaData }) => {
   return (
     <div
@@ -74,8 +75,11 @@ const CourseList = ({ courseMetaData }) => {
                       display: "flex",
                       flexDirection: "column",
                       alignItems: "center",
+                      marginTop:"10px",
                       justifyContent: "space-evenly",
+                      transition: "all 0.2s ease-in",
                     }}
+                    className="single-course-card"
                   >
                     <CardHeader>
                       <CardTitle
@@ -119,7 +123,8 @@ const CourseList = ({ courseMetaData }) => {
                         <p>₹ {course.price}</p>
                       </div>
                       <p>
-                        <Button>Enrol now</Button>
+                        {/* <Button>Enrol now</Button> */}
+                        <StarRating rating={ 1 + Math.floor(Math.random() * 9) * 0.5}/>
                       </p>
                     </CardFooter>
                   </Card>

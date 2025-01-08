@@ -40,9 +40,9 @@ const LocalEditor = ({
     setEditorValue(defaultValue);
   }, [defaultValue]);
 
-  useEffect(() => {
-    setEditorValue(finalImgToCode);
-  }, [finalImgToCode]);
+  // useEffect(() => {
+  //   setEditorValue(finalImgToCode);
+  // }, [finalImgToCode]);
   function handleEditorDidMount(editor) {
     editorRef.current = editor;
   }
@@ -64,13 +64,12 @@ const LocalEditor = ({
   };
 
   const imgToCode = async (file) => {
-    setCodeLoading(!codeLoading);
-    setTriggerPopover(!triggerPopover);
     if (!file) {
       alert("No file selected!");
       return;
     }
-
+    setTriggerPopover(!triggerPopover);
+    setCodeLoading(!codeLoading);
     const formData = new FormData();
     formData.append("file", file);
 
@@ -93,7 +92,7 @@ const LocalEditor = ({
           .replace(/^\/\/ Language: .*\n/g, "") // Remove the "Language" comment
           .replace(/```$/g, "");
         const finalCodeRes = result.replace(/```/g, "");
-        setfinalImgToCode(finalCodeRes);
+        setEditorValue(finalCodeRes);
         setCodeLoading(false);
       } else {
         alert("Failed to upload file.");
@@ -138,42 +137,6 @@ const LocalEditor = ({
       ) : (
         <></>
       )}
-      <Popover open={triggerPopover}>
-        <PopoverTrigger
-          className="athandaithu"
-          style={{
-            position: "absolute",
-            zIndex: "99",
-            top: "35px",
-            left: "870px",
-          }}
-        >
-          <div
-            className="btn-wrapper"
-            style={{
-              height: "42px",
-            }}
-          >
-            <Button
-              onClick={handlePopoverOpen}
-              style={{
-                height: "40px",
-              }}
-            >
-              Image To Code
-            </Button>
-          </div>
-        </PopoverTrigger>
-        <PopoverContent
-          style={{
-            width: "600px",
-          }}
-        >
-          <div className="file-upload-container">
-            <FileUpload imgProcessFun={imgToCode} />
-          </div>
-        </PopoverContent>
-      </Popover>
 
       <div
         className="wrapper"
@@ -199,6 +162,47 @@ const LocalEditor = ({
           >
             Show output
           </Button>
+          <div className="img-code-container">
+            <Popover open={triggerPopover}>
+              <PopoverTrigger
+                className="athandaithu"
+                style={{
+                  position: "absolute",
+                  zIndex: "99",
+                  top: "0px",
+                  left: "160px",
+                }}
+              >
+                <div
+                  className="btn-wrapper"
+                  style={{
+                    height: "42px",
+                  }}
+                >
+                  <Button
+                    onClick={handlePopoverOpen}
+                    className="gradient-button"
+                    style={{
+                      height: "40px",
+                      background: "linear-gradient(90deg, #4158D0, #C05C73)",
+                      color: "white",
+                    }}
+                  >
+                    Image To Code
+                  </Button>
+                </div>
+              </PopoverTrigger>
+              <PopoverContent
+                style={{
+                  width: "600px",
+                }}
+              >
+                <div className="file-upload-container">
+                  <FileUpload imgProcessFun={imgToCode} />
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
 
         {/* <button></button> */}

@@ -9,6 +9,8 @@ import { IconRight } from "react-day-picker";
 import HomeComponetn from "./components/home/HomeComponetn";
 import CodeEditor from "./components/codeEditor/CodeEditor";
 import Course from "./components/courses/Course";
+import ChatInterface from "./components/chatRoom/ChatUi";
+import ChatRoom from "./components/chatRoom/ChatRoom";
 
 function App() {
   const [globUser, setGlobUser] = useState(null);
@@ -22,6 +24,10 @@ function App() {
   const updateCourseComponetAsPresesnt = () => {
     setCurrentComponet("course");
   };
+  const updateChatRoomComponetAsPresesnt = () => {
+    setCurrentComponet("chatRoom");
+  };
+
   return (
     <>
       {/* <OAuth /> */}
@@ -31,6 +37,7 @@ function App() {
           changeToCodeEditor={updateCodeComponetAsPresesnt}
           changeToHome={updateHomeComponetAsPresesnt}
           changeToCourse={updateCourseComponetAsPresesnt}
+          changeToChatRoom={updateChatRoomComponetAsPresesnt}
         />
         <main style={{ width: "100%" }}>
           <SidebarTrigger />
@@ -42,7 +49,8 @@ function App() {
             setGlobUser={setGlobUser}
           />
           {/* <Course/> */}
-          <CodeEditor />
+          {/* <CodeEditor /> */}
+          <ChatRoom />
           {/* {currentComponet === "home" ? (
             <HomeComponetn />
           ) : currentComponet === "codePlayGround" ? (
@@ -50,6 +58,8 @@ function App() {
           ) : currentComponet === "course" ? (
             // <VideoPlayer style={{ margin: "20px 0 0 40px" }} />
             <Course />
+          ) : currentComponet === "chatRoom" ? (
+            <ChatRoom />
           ) : (
             <div>no componet choosed</div>
           )} */}

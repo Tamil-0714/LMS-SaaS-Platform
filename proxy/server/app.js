@@ -40,15 +40,19 @@ app.post("/execute", async (req, res) => {
     res.status(200).send({ output: error, and: "500 not ok" });
   } finally {
     // Clean up the temporary file
-    console.log("file name is : ", fileName);
+    try {
+      console.log("file name is : ", fileName);
 
-    fs.unlinkSync(fileName);
-    if (language === "java") {
-      fs.unlinkSync(`temp/JavaMain.class`);
-    }
+      fs.unlinkSync(fileName);
+      if (language === "java") {
+        fs.unlinkSync(`temp/JavaMain.class`);
+      }
 
-    if (language === "c" || language === "cpp") {
-      fs.unlinkSync(fileName.split(".")[0]);
+      if (language === "c" || language === "cpp") {
+        fs.unlinkSync(fileName.split(".")[0]);
+      }
+    } catch (error) {
+      console.error(error);
     }
   }
 });

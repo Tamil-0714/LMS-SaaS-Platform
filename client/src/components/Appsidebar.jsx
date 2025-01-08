@@ -4,7 +4,7 @@ import {
   Code,
   Inbox,
   GraduationCap,
-  Search,
+  MessageCircleMore,
   UserRoundPen,
 } from "lucide-react";
 
@@ -25,6 +25,7 @@ export function AppSidebar({
   changeToCodeEditor,
   changeToHome,
   changeToCourse,
+  changeToChatRoom,
 }) {
   const items = [
     {
@@ -56,9 +57,10 @@ export function AppSidebar({
       clickerFunction: changeToCodeEditor,
     },
     {
-      title: "Search",
+      title: "Chat Room",
       url: "#",
-      icon: Search,
+      icon: MessageCircleMore,
+      clickerFunction: changeToChatRoom,
     },
     {
       title: "Profile",

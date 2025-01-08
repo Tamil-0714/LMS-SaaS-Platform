@@ -19,7 +19,7 @@ const prompt = `Analyze the provided image, which may be a screenshot from a lea
 
 1. Focus exclusively on extracting the programming code from the image, ignoring any irrelevant text.
 2. Identify the programming language of the extracted code.
-3. Return the extracted code directly as output. The first line of the code should include a comment specifying the programming language in the following format:
+3. Return the extracted code as formated directly as output. The first line of the code should include a comment specifying the programming language in the following format:
 
 // Language: <programming language>
 

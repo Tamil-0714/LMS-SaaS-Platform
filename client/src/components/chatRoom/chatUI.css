@@ -1,0 +1,26 @@
+/* Scrollbar Styling */
+.chatUIContainer::-webkit-scrollbar {
+    width: 2px; /* Adjust the width of the scrollbar */
+    /* display: none; */
+}
+
+.chatUIContainer::-webkit-scrollbar-track {
+    background: #f4f4f4; /* Light gray track to blend with the UI */
+    border-radius: 10px; /* Rounded track */
+    display: none;
+}
+
+.chatUIContainer::-webkit-scrollbar-thumb {
+    background-color: #b0b0b0; /* Neutral color to match UI */
+    border-radius: 10px; /* Rounded thumb */
+    border: 2px solid #f4f4f4; /* Padding effect around the thumb */
+}
+
+.chatUIContainer::-webkit-scrollbar-thumb:hover {
+    background-color: #888; /* Slightly darker on hover for feedback */
+}
+
+/* Optional - Horizontal Scrollbar (if needed) */
+.chatUIContainer::-webkit-scrollbar-horizontal {
+    height: 8px; /* Adjust the height */
+}
