@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import config from "@/config";
 import { Input } from "./ui/input";
+import { Label } from "@radix-ui/react-label";
 
 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
@@ -38,7 +39,9 @@ const verifyAuthToken = async (authToken, setUser, setGlobUser) => {
 const OAuth = ({ style, setGlobUser }) => {
   const [user, setUser] = useState(null);
   const [guestId, setGuestId] = useState("");
+  const [userNamePopUp, setUserNamePopUp] = useState(false);
   const [guestLogin, setGuestLogin] = useState(false);
+  const [userName, setUserName] = useState("");
 
   useEffect(() => {
     const authToken = localStorage.getItem("authToken");
@@ -93,14 +96,17 @@ const OAuth = ({ style, setGlobUser }) => {
       );
 
       if (res.status === 200) {
-        const { userInfo, authToken } = res.data; // Extract user info and token
+        const { userInfo, authToken, duplicate } = res.data;
         setUser(userInfo);
         setGlobUser(userInfo);
         console.log(userInfo);
+        localStorage.setItem("authToken", authToken);
+        if (!duplicate) {
+          setUserNamePopUp(true);
+        }
         console.log(`Auth token ${authToken}`);
 
         // Store the token securely
-        localStorage.setItem("authToken", authToken);
         const signInButton = document.getElementById("googleSignInButton");
         if (signInButton) {
           signInButton.innerHTML = ""; // Clear the button's content
@@ -121,6 +127,39 @@ const OAuth = ({ style, setGlobUser }) => {
   };
   const handleInputChange = (event) => {
     setGuestId(event.target.value);
+  };
+
+  const handleUserNameChange = (event) => {
+    setUserName(event.target.value);
+  };
+  const updateUserName = async (userName) => {
+    try {
+      const headers = {
+        "Content-Type": "application/json",
+        authorization: localStorage.getItem("authToken"),
+      };
+      const response = await axios.post(
+        `${config.apiBaseUrl}/api/setusername`,
+        { userName },
+        { headers: headers }
+      );
+      if (response.status === 200) {
+        return response.data;
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+  const handleUpdateUserName = async () => {
+    try {
+      alert(userName);
+      const res = await updateUserName(userName);
+      if (res.message === "success") {
+        setUserNamePopUp(false);
+      }
+    } catch (error) {
+      console.error(error);
+    }
   };
   const handleLogout = () => {
     localStorage.removeItem("authToken");
@@ -226,6 +265,57 @@ const OAuth = ({ style, setGlobUser }) => {
             </PopoverContent>
           </Popover>
         </>
+      )}
+      {userNamePopUp ? (
+        <>
+          <div
+            style={{
+              width: "100vw",
+              height: "100vh",
+              position: "absolute",
+              top: "-10px",
+              left: "-1024%",
+              zIndex: "999",
+              // transform: "translate(-50%, -50%)",
+              backgroundColor: "#000000d9",
+              // outline: "1px solid red",
+              padding: "12px",
+              display: "flex",
+              // alignItems:"center",
+              justifyContent: "center",
+            }}
+          >
+            <div
+              className="username-input-wrapper"
+              style={{
+                marginTop: "300px",
+                display: "flex",
+                gap: "10px",
+              }}
+            >
+              <Input
+                style={{
+                  height: "40px",
+                  width: "200px",
+                  marginTop: "20px",
+                }}
+                onChange={handleUserNameChange}
+                type="text"
+                placeholder="User Name"
+              />
+              <div
+                className="username-btn"
+                style={{
+                  marginTop: "20px",
+                }}
+              >
+                <Button onClick={handleUpdateUserName}>Update User Name</Button>
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        <></>
       )}
     </div>
   );

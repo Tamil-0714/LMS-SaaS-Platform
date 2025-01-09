@@ -93,6 +93,17 @@ async function fetchUserAuthId(id) {
     // throw error;
   }
 }
+async function updateUserName(userName, authId) {
+  try {
+    const query = "UPDATE userAuthId SET userId = ? WHERE authId = ?";
+    const params = [userName, authId];
+    const rows = await queryDB(query, params);
+    return rows;
+  } catch (error) {
+    console.error(error);
+    // throw error;
+  }
+}
 
 // async function insertDummy(
 //   courseId,
@@ -119,7 +130,6 @@ async function fetchUserAuthId(id) {
 //   }
 // }
 
-
 async function fetchCourses() {
   try {
     const query = "SELECT * FROM course";
@@ -135,5 +145,6 @@ module.exports = {
   insertUserAuthId,
   fetchCourses,
   fetchUserAuthId,
+  updateUserName,
   // insertDummy
 };

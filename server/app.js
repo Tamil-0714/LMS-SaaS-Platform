@@ -1,14 +1,15 @@
 const express = require("express");
 const cors = require("cors");
-const { verifyToken } = require("./middleware/middleware");
+const { verifyToken, verifyTokenSocket } = require("./middleware/middleware");
 const videoRoute = require("./routes/videoRoute");
 const { OAuth2Client } = require("google-auth-library");
 const axios = require("axios");
 const crypto = require("crypto");
-const { insertUserAuthId, fetchCourses } = require("./DB/DB");
+const { insertUserAuthId, fetchCourses, updateUserName } = require("./DB/DB");
 const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
+const { Server } = require("socket.io");
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 require("dotenv").config();
@@ -47,13 +48,14 @@ const googleAuth = async (token) => {
     const payload = ticket.getPayload();
     const { sub, email, name, picture } = payload;
     const authToken = sub;
-    console.log(`user ${name} verified`);
 
     const rows = await insertUserAuthId(sub, email, name, picture);
 
-    console.log("this is rows : " + rows);
+    if (rows.message === "ER_DUP_ENTRY") {
+      return { authToken, userInfo: { name, email, picture }, duplicate: true };
+    }
 
-    return { authToken, userInfo: { name, email, picture } };
+    return { authToken, userInfo: { name, email, picture }, duplicate: false };
   } catch (error) {
     console.error(error);
   }
@@ -66,11 +68,23 @@ app.post("/auth/google/callback", async (req, res) => {
   }
 
   try {
-    const { authToken, userInfo } = await googleAuth(token);
-    res.status(200).json({ authToken, userInfo });
+    const { authToken, userInfo, duplicate } = await googleAuth(token);
+    res.status(200).json({ authToken, userInfo, duplicate });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Authentication failed" });
+  }
+});
+
+app.post("/api/setusername", verifyToken, async (req, res) => {
+  try {
+    const { userName } = req.body;
+    const rows = await updateUserName(userName, req.user[0]?.authId);
+    if (rows.affectedRows === 1) {
+      res.status(200).json({ message: "success" });
+    }
+  } catch (error) {
+    console.error(error);
   }
 });
 
@@ -142,7 +156,7 @@ app.post("/imgToCode", upload.single("file"), async (req, res) => {
       "http://localhost:3030/proxyImgToCode",
       body
     );
-    console.log("Res from proxy : ", result.data);
+
     res.status(200).send(result.data);
   } catch (error) {
     console.error(error);
@@ -179,7 +193,68 @@ app.use((req, res, next) => {
 });
 
 const PORT = process.env.PORT || 8020;
-app.listen(PORT, () => {
-  console.log(`app listening on port http://localhost:${PORT}`);
+const server = require("http").createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"],
+  },
 });
-//  middleware.authUser,
+
+// WebSocket event handling
+io.use(verifyTokenSocket);
+
+const connectedUsers = new Map();
+
+io.on("connection", (socket) => {
+  const thisUser = socket.user.authId;
+  console.log("this this actual socket : ", socket.user);
+
+  // Add user to connectedUsers if not already present
+  if (!connectedUsers.has(thisUser)) {
+    connectedUsers.set(thisUser, { user: thisUser, joinedGroups: [] });
+  }
+
+  // Listen for a user joining a group
+  socket.on("joinGroup", (groupName) => {
+    const user = connectedUsers.get(thisUser);
+    if (user.joinedGroups.includes(groupName)) {
+      console.log(`${thisUser} is already in group: ${groupName}`);
+      return;
+    }
+    console.log(`${thisUser} joined group: ${groupName}`);
+    user.joinedGroups.push(groupName);
+    socket.join(groupName); // Add the socket to the group (room)
+  });
+
+  // Handle receiving a message for a group
+  socket.on("sendMessageToGroup", ({ groupName, message }) => {
+    const userSocketIds = connectedUsers.get(thisUser);
+
+    console.log(`Message to group ${groupName} from ${thisUser}:`, message);
+    socket
+      .to(groupName)
+      .emit("groupMessage", { groupName, message, sender: socket.user.userId });
+  });
+
+  // Handle user disconnecting
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+
+    const user = connectedUsers.get(thisUser);
+    if (user) {
+      // Remove user if they have no active connections or joined groups
+      user.joinedGroups = user.joinedGroups.filter((group) => {
+        return Array.from(io.sockets.adapter.rooms.get(group) || []).length > 0;
+      });
+      if (user.joinedGroups.length === 0) {
+        connectedUsers.delete(thisUser);
+      }
+    }
+  });
+});
+
+server.listen(PORT, () => {
+  console.log(`App listening on port http://localhost:${PORT}`);
+});

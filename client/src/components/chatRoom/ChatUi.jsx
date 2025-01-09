@@ -6,6 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Plus, Send, Copy, Trash2, Check } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import "./chatUI.css";
+import { io } from "socket.io-client";
+
+const socket = io("http://localhost:8020", {
+  auth: {
+    token: localStorage.getItem("authToken"),
+  },
+});
 
 const ContextMenu = ({ x, y, onSelect, onDelete, onCopy, selectInnerHTML }) => (
   <div
@@ -38,6 +45,28 @@ export default function ChatInterface({ name, email, propMessages }) {
   const [messages, setMessages] = useState([]);
   const [selectedMessages, setSelectedMessages] = useState([]);
   const [contextMenu, setContextMenu] = useState(null);
+  const [currentGroup, setCurrentGroup] = useState(null);
+
+  useEffect(() => {
+    // Listen for group messages from the server
+    socket.on("groupMessage", ({ groupName, message, sender }) => {
+      console.log(`Received message in group ${groupName}:`, message);
+      console.log("this is sender : ", sender);
+      if (sender === "Tamil_07") {
+        setMessages((prev) => [...prev, { text: message, sent: true }]);
+      } else {
+        setMessages((prev) => [...prev, { text: message, sent: false }]);
+      }
+    });
+    socket.on("connect_error", (err) => {
+      console.error("Connection error:", err.message);
+      alert(`Connection failed: ${err.message}`);
+    });
+
+    return () => {
+      socket.off("groupMessage");
+    };
+  }, []);
 
   useEffect(() => {
     setMessages(propMessages);
@@ -63,11 +92,40 @@ export default function ChatInterface({ name, email, propMessages }) {
         chatContainerRef.current.scrollHeight;
     }
   };
+  const joinGroup = (groupName) => {
+    if (currentGroup === groupName) {
+      console.log(`Already in group: ${groupName}`);
+      return; // Prevent redundant joins
+    }
+    setCurrentGroup(groupName);
+    socket.emit("joinGroup", groupName);
+    console.log(`Joined group: ${groupName}`);
+  };
+  const sendMessage = async (message) => {
+    if (!currentGroup) {
+      alert("Please select a group first!");
+      return;
+    }
 
-  const handleSubmit = (e) => {
+    // Send message to the backend for the current group
+    socket.emit("sendMessageToGroup", {
+      groupName: currentGroup,
+      message: newMessage,
+    });
+
+    // Update UI locally
+    setMessages((prev) => [
+      ...prev,
+      { groupName: currentGroup, text: newMessage, sent: true },
+    ]);
+    setNewMessage("");
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessages([...messages, { text: newMessage, sent: true }]);
+    // setMessages([...messages, { text: newMessage, sent: true }]);
     scrollToBottom();
+    await sendMessage(newMessage);
     setNewMessage("");
   };
 
@@ -141,104 +199,117 @@ export default function ChatInterface({ name, email, propMessages }) {
   }, [selectedMessages]);
 
   return (
-    <Card
-      className="w-[380px] h-[600px] bg-zinc-950 border-zinc-800"
-      onClick={() => {
-        setContextMenu(null);
-      }}
-    >
-      <div className="flex items-center gap-3 p-4 border-b border-zinc-800">
-        <Avatar>
-          <AvatarImage src="/placeholder.svg" />
-          <AvatarFallback>SD</AvatarFallback>
-        </Avatar>
-        <div className="flex-1">
-          <h3 className="font-semibold text-white">{name}</h3>
-          <p className="text-sm text-zinc-400">{email}</p>
-        </div>
-        {selectedMessages.length > 0 ? (
-          <>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="text-zinc-400"
-              onClick={handleCopySelected}
-            >
-              <Copy className="h-5 w-5" />
-            </Button>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="text-zinc-400"
-              onClick={handleDeleteSelected}
-            >
-              <Trash2 className="h-5 w-5" />
-            </Button>
-          </>
-        ) : (
-          <Button size="icon" variant="ghost" className="text-zinc-400">
-            <Plus className="h-5 w-5" />
-          </Button>
-        )}
-      </div>
-
-      <div
-        ref={chatContainerRef}
-        className="chatUIContainer flex-1 p-4 overflow-y-auto h-[calc(100%-140px)] space-y-4"
+    <>
+      <button
+        onClick={() => {
+          joinGroup("niceGrp");
+        }}
       >
-        {messages.map((message, index) => (
-          <div
-            key={index}
-            onContextMenu={(e) => handleContextMenu(e, index, selectedMessages)}
-            className={`flex ${message.sent ? "justify-end" : "justify-start"}`}
-            onClick={() =>
-              handleSelectMessageByClicking(index, selectedMessages)
-            }
-          >
-            <div
-              className={`rounded-lg px-4 py-2 max-w-[80%] ${
-                message.sent
-                  ? "bg-white text-zinc-900"
-                  : "bg-zinc-800 text-zinc-100"
-              } ${selectedMessages.includes(index) ? "opacity-50" : ""}`}
-            >
-              {message.text}
-              {selectedMessages.includes(index) && (
-                <Check className="inline-block ml-2 h-4 w-4 text-green-500" />
-              )}
-            </div>
+        join grp
+      </button>
+      <Card
+        className="w-[380px] h-[600px] bg-zinc-950 border-zinc-800"
+        onClick={() => {
+          setContextMenu(null);
+        }}
+      >
+        <div className="flex items-center gap-3 p-4 border-b border-zinc-800">
+          <Avatar>
+            <AvatarImage src="/placeholder.svg" />
+            <AvatarFallback>SD</AvatarFallback>
+          </Avatar>
+          <div className="flex-1">
+            <h3 className="font-semibold text-white">{name}</h3>
+            <p className="text-sm text-zinc-400">{email}</p>
           </div>
-        ))}
-        {/* <div ref={messagesEndRef} /> */}
-      </div>
-
-      <form onSubmit={handleSubmit} className="p-4 border-t border-zinc-800">
-        <div className="flex gap-2">
-          <Input
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type your message..."
-            className="flex-1 bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-400"
-          />
-          <Button
-            type="submit"
-            size="icon"
-            className="bg-white hover:bg-zinc-200"
-          >
-            <Send className="h-4 w-4 text-zinc-900" />
-          </Button>
+          {selectedMessages.length > 0 ? (
+            <>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="text-zinc-400"
+                onClick={handleCopySelected}
+              >
+                <Copy className="h-5 w-5" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="text-zinc-400"
+                onClick={handleDeleteSelected}
+              >
+                <Trash2 className="h-5 w-5" />
+              </Button>
+            </>
+          ) : (
+            <Button size="icon" variant="ghost" className="text-zinc-400">
+              <Plus className="h-5 w-5" />
+            </Button>
+          )}
         </div>
-      </form>
-      {contextMenu && (
-        <ContextMenu
-          x={contextMenu.x}
-          y={contextMenu.y}
-          onSelect={() => handleSelectMessage(contextMenu.messageIndex)}
-          onDelete={() => handleDeleteMessage(contextMenu.messageIndex)}
-          onCopy={() => handleCopyMessage(contextMenu.messageIndex)}
-          selectInnerHTML={contextMenu.selectInnerHTML}
-        />
-      )}
-    </Card>
+
+        <div
+          ref={chatContainerRef}
+          className="chatUIContainer flex-1 p-4 overflow-y-auto h-[calc(100%-140px)] space-y-4"
+        >
+          {messages.map((message, index) => (
+            <div
+              key={index}
+              onContextMenu={(e) =>
+                handleContextMenu(e, index, selectedMessages)
+              }
+              className={`flex ${
+                message.sent ? "justify-end" : "justify-start"
+              }`}
+              onClick={() =>
+                handleSelectMessageByClicking(index, selectedMessages)
+              }
+            >
+              <div
+                className={`rounded-lg px-4 py-2 max-w-[80%] ${
+                  message.sent
+                    ? "bg-white text-zinc-900"
+                    : "bg-zinc-800 text-zinc-100"
+                } ${selectedMessages.includes(index) ? "opacity-50" : ""}`}
+              >
+                {message.text}
+                {selectedMessages.includes(index) && (
+                  <Check className="inline-block ml-2 h-4 w-4 text-green-500" />
+                )}
+              </div>
+            </div>
+          ))}
+          {/* <div ref={messagesEndRef} /> */}
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-4 border-t border-zinc-800">
+          <div className="flex gap-2">
+            <Input
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="Type your message..."
+              className="flex-1 bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-400"
+            />
+            <Button
+              type="submit"
+              size="icon"
+              className="bg-white hover:bg-zinc-200"
+            >
+              <Send className="h-4 w-4 text-zinc-900" />
+            </Button>
+          </div>
+        </form>
+        {contextMenu && (
+          <ContextMenu
+            x={contextMenu.x}
+            y={contextMenu.y}
+            onSelect={() => handleSelectMessage(contextMenu.messageIndex)}
+            onDelete={() => handleDeleteMessage(contextMenu.messageIndex)}
+            onCopy={() => handleCopyMessage(contextMenu.messageIndex)}
+            selectInnerHTML={contextMenu.selectInnerHTML}
+          />
+        )}
+      </Card>
+    </>
   );
 }
