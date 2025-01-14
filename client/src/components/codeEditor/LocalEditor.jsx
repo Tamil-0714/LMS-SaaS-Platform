@@ -80,6 +80,7 @@ const LocalEditor = ({
         {
           headers: {
             "Content-Type": "multipart/form-data",
+            authorization: localStorage.getItem("authToken"),
           },
         }
       );
@@ -95,11 +96,17 @@ const LocalEditor = ({
         setEditorValue(finalCodeRes);
         setCodeLoading(false);
       } else {
-        alert("Failed to upload file.");
+        setCodeLoading(false);
+        alert("Failed to upload file. or unauthrosed");
       }
     } catch (error) {
       console.error("Error uploading file:", error);
-      alert("An error occurred while uploading the file.");
+      if (error.status === 403) {
+        setCodeLoading(false);
+        alert("unauthrosed");
+        return;
+      }
+      alert("An error occurred while uploading the file. ");
     }
   };
 

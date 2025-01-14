@@ -5,7 +5,7 @@ import { SidebarProvider, SidebarTrigger } from "./components/ui/sidebar";
 import { AppSidebar } from "./components/Appsidebar";
 import { Button } from "./components/ui/button";
 import { VideoPlayer } from "./components/VideoPlayer";
-import { IconRight } from "react-day-picker";
+import { Toaster } from "@/components/ui/sonner";
 import HomeComponetn from "./components/home/HomeComponetn";
 import CodeEditor from "./components/codeEditor/CodeEditor";
 import Course from "./components/courses/Course";
@@ -48,10 +48,11 @@ function App() {
             style={{ position: "absolute", top: "10px", right: "10px" }}
             setGlobUser={setGlobUser}
           />
+
           {/* <Course/> */}
           {/* <CodeEditor /> */}
-          <ChatRoom />
-          {/* {currentComponet === "home" ? (
+          {/* <ChatRoom userInfo={globUser} /> */}
+          {currentComponet === "home" ? (
             <HomeComponetn />
           ) : currentComponet === "codePlayGround" ? (
             <CodeEditor />
@@ -59,12 +60,13 @@ function App() {
             // <VideoPlayer style={{ margin: "20px 0 0 40px" }} />
             <Course />
           ) : currentComponet === "chatRoom" ? (
-            <ChatRoom />
+            <ChatRoom userInfo={globUser} />
           ) : (
             <div>no componet choosed</div>
-          )} */}
+          )}
           {/* home componet and other main frame comps. will be render here */}
         </main>
+        <Toaster position="top-center" richColors />
       </SidebarProvider>
     </>
   );

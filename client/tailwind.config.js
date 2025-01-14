@@ -60,7 +60,11 @@ export default {
   				border: 'hsl(var(--sidebar-border))',
   				ring: 'hsl(var(--sidebar-ring))'
   			}
-  		}
+  		},
+		  lineClamp: {
+			20: '20',
+			10:'10',
+		  },
   	}
   },
   plugins: [require("tailwindcss-animate")],

@@ -2,7 +2,7 @@ import {
   Calendar,
   Home,
   Code,
-  Inbox,
+  LibraryBig,
   GraduationCap,
   MessageCircleMore,
   UserRoundPen,
@@ -41,9 +41,9 @@ export function AppSidebar({
       clickerFunction: changeToCourse,
     },
     {
-      title: "Inbox",
+      title: "My Courses",
       url: "#",
-      icon: Inbox,
+      icon: LibraryBig,
     },
     {
       title: "Notes and Calendar",

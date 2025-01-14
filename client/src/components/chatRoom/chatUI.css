@@ -1,26 +1,47 @@
 /* Scrollbar Styling */
 .chatUIContainer::-webkit-scrollbar {
-    width: 2px; /* Adjust the width of the scrollbar */
-    /* display: none; */
+  width: 2px; /* Adjust the width of the scrollbar */
+  /* display: none; */
 }
 
 .chatUIContainer::-webkit-scrollbar-track {
-    background: #f4f4f4; /* Light gray track to blend with the UI */
-    border-radius: 10px; /* Rounded track */
-    display: none;
+  background: #f4f4f4; /* Light gray track to blend with the UI */
+  border-radius: 10px; /* Rounded track */
+  display: none;
 }
 
 .chatUIContainer::-webkit-scrollbar-thumb {
-    background-color: #b0b0b0; /* Neutral color to match UI */
-    border-radius: 10px; /* Rounded thumb */
-    border: 2px solid #f4f4f4; /* Padding effect around the thumb */
+  background-color: #b0b0b0; /* Neutral color to match UI */
+  border-radius: 10px; /* Rounded thumb */
+  border: 2px solid #f4f4f4; /* Padding effect around the thumb */
 }
 
 .chatUIContainer::-webkit-scrollbar-thumb:hover {
-    background-color: #888; /* Slightly darker on hover for feedback */
+  background-color: #888; /* Slightly darker on hover for feedback */
 }
 
 /* Optional - Horizontal Scrollbar (if needed) */
 .chatUIContainer::-webkit-scrollbar-horizontal {
-    height: 8px; /* Adjust the height */
+  height: 8px; /* Adjust the height */
+}
+.senders-messafe {
+    position: relative;
+    top:-10px;
+    left: 5px;
+    margin-top: 16px;
+}
+.recivers-message {
+    /* margin-bottom: 32px; */
+}
+.senders-messafe::before {
+  content: "";
+  position: absolute;
+  top: 0px; /* Adjust to align the arrow with the avatar */
+  left: -10px; /* Position the arrow to overlap with the avatar */
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0px 15px 15px 0; /* Create a triangle */
+  border-color: transparent rgb(39 39 42 / var(--tw-bg-opacity, 1)) transparent transparent; 
+  /* border-color: transparent #ff0000 transparent transparent; */
 }

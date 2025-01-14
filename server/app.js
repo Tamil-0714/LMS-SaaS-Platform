@@ -5,7 +5,12 @@ const videoRoute = require("./routes/videoRoute");
 const { OAuth2Client } = require("google-auth-library");
 const axios = require("axios");
 const crypto = require("crypto");
-const { insertUserAuthId, fetchCourses, updateUserName } = require("./DB/DB");
+const {
+  insertUserAuthId,
+  fetchCourses,
+  updateUserName,
+  insertCourseEnrollment,
+} = require("./DB/DB");
 const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
@@ -132,7 +137,7 @@ app.get("/images/courseThumbnail/:courseId", (req, res) => {
   res.sendFile(imagePath);
 });
 
-app.post("/imgToCode", upload.single("file"), async (req, res) => {
+app.post("/imgToCode", verifyToken, upload.single("file"), async (req, res) => {
   // "file" matches the key in FormData.append("file", file)
 
   // Check if a file was uploaded
@@ -160,6 +165,47 @@ app.post("/imgToCode", upload.single("file"), async (req, res) => {
     res.status(200).send(result.data);
   } catch (error) {
     console.error(error);
+  }
+});
+
+function getCurrentDateForMySQL() {
+  const now = new Date();
+
+  // Extract year, month, and day
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
+  const day = String(now.getDate()).padStart(2, "0");
+
+  // Combine into YYYY-MM-DD format
+  return `${year}-${month}-${day}`;
+}
+
+app.post("/enrollcourse/:id", verifyToken, async (req, res) => {
+  try {
+    const enrollmentId = generateUUID();
+    const courseId = req.params.id;
+    const userId = req.user[0]?.userId;
+    const enrolledDate = getCurrentDateForMySQL();
+    const completionStatus = 0;
+    const rows = await insertCourseEnrollment(
+      enrollmentId,
+      userId,
+      courseId,
+      enrolledDate,
+      completionStatus
+    );
+    if (rows?.affectedRows === 1) {
+      res
+        .status(200)
+        .json({ userInfo: userId, success: true, duplicate: false });
+    }
+  } catch (error) {
+    if (error.code === "ER_DUP_ENTRY") {
+      res
+        .status(200)
+        .json({ userInfo: null, success: false, duplicate: true });
+    }
+    console.error("course error : ", error.code);
   }
 });
 
@@ -209,48 +255,57 @@ const connectedUsers = new Map();
 
 io.on("connection", (socket) => {
   const thisUser = socket.user.authId;
-  console.log("this this actual socket : ", socket.user);
 
   // Add user to connectedUsers if not already present
   if (!connectedUsers.has(thisUser)) {
-    connectedUsers.set(thisUser, { user: thisUser, joinedGroups: [] });
+    connectedUsers.set(thisUser, {
+      user: thisUser,
+      sockets: [],
+      joinedGroups: [],
+    });
   }
+  // Add this socket to the user's sockets array
+  const userData = connectedUsers.get(thisUser);
+  userData.sockets.push(socket.id);
 
   // Listen for a user joining a group
   socket.on("joinGroup", (groupName) => {
-    const user = connectedUsers.get(thisUser);
-    if (user.joinedGroups.includes(groupName)) {
+    if (!userData.joinedGroups.includes(groupName)) {
+      console.log(`${thisUser} joined group: ${groupName}`);
+      userData.joinedGroups.push(groupName);
+    } else {
       console.log(`${thisUser} is already in group: ${groupName}`);
-      return;
     }
-    console.log(`${thisUser} joined group: ${groupName}`);
-    user.joinedGroups.push(groupName);
-    socket.join(groupName); // Add the socket to the group (room)
   });
-
   // Handle receiving a message for a group
   socket.on("sendMessageToGroup", ({ groupName, message }) => {
-    const userSocketIds = connectedUsers.get(thisUser);
-
     console.log(`Message to group ${groupName} from ${thisUser}:`, message);
-    socket
-      .to(groupName)
-      .emit("groupMessage", { groupName, message, sender: socket.user.userId });
-  });
 
+    // Find all users in the group
+    connectedUsers.forEach((user, userId) => {
+      if (user.joinedGroups.includes(groupName)) {
+        // Broadcast the message to all sockets of this user
+        user.sockets.forEach((socketId) => {
+          io.to(socketId).emit("groupMessage", {
+            groupName,
+            message,
+            sender: socket.user.userId,
+          });
+        });
+      }
+    });
+  });
   // Handle user disconnecting
   socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
+    console.log(`Socket disconnected: ${socket.id} (User: ${thisUser})`);
 
-    const user = connectedUsers.get(thisUser);
-    if (user) {
-      // Remove user if they have no active connections or joined groups
-      user.joinedGroups = user.joinedGroups.filter((group) => {
-        return Array.from(io.sockets.adapter.rooms.get(group) || []).length > 0;
-      });
-      if (user.joinedGroups.length === 0) {
-        connectedUsers.delete(thisUser);
-      }
+    // Remove this socket from the user's sockets array
+    userData.sockets = userData.sockets.filter((id) => id !== socket.id);
+
+    // If the user has no more active sockets, clean up their data
+    if (userData.sockets.length === 0) {
+      console.log(`No active connections for user: ${thisUser}`);
+      connectedUsers.delete(thisUser);
     }
   });
 });

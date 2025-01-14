@@ -24,6 +24,7 @@ const verifyAuthToken = async (authToken, setUser, setGlobUser) => {
         name: userData.google_name,
         email: userData.email,
         picture: userData.pictureURL,
+        userId: userData.userId,
       };
       setUser(verifiedUser);
       setGlobUser(verifiedUser);
@@ -156,6 +157,9 @@ const OAuth = ({ style, setGlobUser }) => {
       const res = await updateUserName(userName);
       if (res.message === "success") {
         setUserNamePopUp(false);
+        setGlobUser([{ ...user, userId: userName }]);
+        console.log("after username : ", user);
+        
       }
     } catch (error) {
       console.error(error);

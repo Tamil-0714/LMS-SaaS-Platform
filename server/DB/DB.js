@@ -105,6 +105,29 @@ async function updateUserName(userName, authId) {
   }
 }
 
+async function insertCourseEnrollment(
+  enrollmentId,
+  userId,
+  courseId,
+  enrolledDate,
+  completionStatus
+) {
+  try {
+    const query = "INSERT INTO enrolement VALUES (?, ?, ?, ?, ?)";
+    const params = [
+      enrollmentId,
+      userId,
+      courseId,
+      enrolledDate,
+      completionStatus,
+    ];
+    return await queryDB(query, params);
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+
 // async function insertDummy(
 //   courseId,
 //   course_name,
@@ -146,5 +169,6 @@ module.exports = {
   fetchCourses,
   fetchUserAuthId,
   updateUserName,
+  insertCourseEnrollment,
   // insertDummy
 };
