@@ -164,11 +164,26 @@ async function fetchCourses() {
   }
 }
 
+async function fetchEnrollment(userId) {
+  try {
+    const query =
+      "SELECT * FROM course where course_id IN (SELECT course_id FROM enrolement WHERE user_id = ? )";
+    const params = [userId];
+    const rows = await queryDB(query, params);
+    console.log(rows);
+
+    return rows;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
 module.exports = {
   insertUserAuthId,
   fetchCourses,
   fetchUserAuthId,
   updateUserName,
   insertCourseEnrollment,
+  fetchEnrollment,
   // insertDummy
 };

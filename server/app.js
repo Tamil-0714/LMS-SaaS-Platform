@@ -10,6 +10,7 @@ const {
   fetchCourses,
   updateUserName,
   insertCourseEnrollment,
+  fetchEnrollment,
 } = require("./DB/DB");
 const path = require("path");
 const fs = require("fs");
@@ -201,11 +202,30 @@ app.post("/enrollcourse/:id", verifyToken, async (req, res) => {
     }
   } catch (error) {
     if (error.code === "ER_DUP_ENTRY") {
-      res
-        .status(200)
-        .json({ userInfo: null, success: false, duplicate: true });
+      res.status(200).json({ userInfo: null, success: false, duplicate: true });
     }
     console.error("course error : ", error.code);
+  }
+});
+
+app.get("/enrollments", verifyToken, async (req, res) => {
+  try {
+    const userId = req.user[0]?.userId;
+    const rows = await fetchEnrollment(userId);
+    if (rows && rows[0]) {
+      res
+        .status(200)
+        .json({ success: true, message: "courses found", data: rows });
+    } else {
+      res
+        .status(200)
+        .json({ success: false, message: "courses not found", data: [] });
+    }
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ message: "internal server error", success: false, data: [] });
   }
 });
 

@@ -4,13 +4,14 @@ import OAuth from "./components/OAuth";
 import { SidebarProvider, SidebarTrigger } from "./components/ui/sidebar";
 import { AppSidebar } from "./components/Appsidebar";
 import { Button } from "./components/ui/button";
-import { VideoPlayer } from "./components/VideoPlayer";
+import { VideoPlayer } from "./components/mycourses/VideoPlayer";
 import { Toaster } from "@/components/ui/sonner";
 import HomeComponetn from "./components/home/HomeComponetn";
 import CodeEditor from "./components/codeEditor/CodeEditor";
 import Course from "./components/courses/Course";
 import ChatInterface from "./components/chatRoom/ChatUi";
 import ChatRoom from "./components/chatRoom/ChatRoom";
+import MyCourse from "./components/mycourses/MyCourse";
 
 function App() {
   const [globUser, setGlobUser] = useState(null);
@@ -52,7 +53,8 @@ function App() {
           {/* <Course/> */}
           {/* <CodeEditor /> */}
           {/* <ChatRoom userInfo={globUser} /> */}
-          {currentComponet === "home" ? (
+          <MyCourse />
+          {/* {currentComponet === "home" ? (
             <HomeComponetn />
           ) : currentComponet === "codePlayGround" ? (
             <CodeEditor />
@@ -63,7 +65,7 @@ function App() {
             <ChatRoom userInfo={globUser} />
           ) : (
             <div>no componet choosed</div>
-          )}
+          )} */}
           {/* home componet and other main frame comps. will be render here */}
         </main>
         <Toaster position="top-center" richColors />

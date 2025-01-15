@@ -41,7 +41,7 @@ export function AppSidebar({
       clickerFunction: changeToCourse,
     },
     {
-      title: "My Courses",
+      title: "My Learnings",
       url: "#",
       icon: LibraryBig,
     },
