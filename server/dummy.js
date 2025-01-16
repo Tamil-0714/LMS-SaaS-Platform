@@ -1,6 +1,7 @@
 const express = require("express");
 const axios = require("axios");
-const { insertUserAuthId } = require("./DB/DB");
+const crypto = require("crypto");
+const { insertUserAuthId, insertChatRoom } = require("./DB/DB");
 const app = express();
 
 // app.get("/dummyCourse", async (req, res) => {
@@ -101,6 +102,121 @@ app.get("/dummyUsers", async (req, res) => {
   }
   console.log("completed");
   res.send("ok");
+});
+
+function generateUUID() {
+  return crypto.randomBytes(8).toString("hex"); // 8 bytes = 16 hex characters
+}
+function getMySQLTimestamp() {
+  const now = new Date();
+
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0"); // Months are zero-based
+  const day = String(now.getDate()).padStart(2, "0");
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  const seconds = String(now.getSeconds()).padStart(2, "0");
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
+app.get("/dummyChatRoom", async (req, res) => {
+  try {
+    const data = [
+      {
+        course_id: "09b8bf0345b3258c",
+        course_name: "Building REST APIs",
+        group_name: "API-Builders-Hub",
+      },
+      {
+        course_id: "0afc64d55106a723",
+        course_name: "Machine Learning Basics",
+        group_name: "ML-Starters",
+      },
+      {
+        course_id: "15fb246ee263fe17",
+        course_name: "Adobe Illustrator Fundamentals",
+        group_name: "Illustrator-Gurus",
+      },
+      {
+        course_id: "38c4917849ba6abe",
+        course_name: "React Fundamentals",
+        group_name: "React-Rookies",
+      },
+      {
+        course_id: "457076d2120ecf59",
+        course_name: "Node.js Basics",
+        group_name: "Node-Navigators",
+      },
+      {
+        course_id: "4853f6de661874fd",
+        course_name: "SQL Mastery",
+        group_name: "SQL-Masters",
+      },
+      {
+        course_id: "64b7052bfd54d2f5",
+        course_name: "Data Visualization with Python",
+        group_name: "PyViz-Community",
+      },
+      {
+        course_id: "680f202d4f57cb0c",
+        course_name: "Mastering TypeScript",
+        group_name: "TS-Mastery",
+      },
+      {
+        course_id: "752f54c1fc1276f9",
+        course_name: "Hacking",
+        group_name: "Hackers-Den",
+      },
+      {
+        course_id: "952a5495fc1976f8",
+        course_name: "Advanced React Patterns",
+        group_name: "React-Wizards",
+      },
+      {
+        course_id: "aab1f6a5c916afbf",
+        course_name: "Express.js for APIs",
+        group_name: "Express-Experts",
+      },
+      {
+        course_id: "bc2b84a376d612b6",
+        course_name: "UI Prototyping in Adobe XD",
+        group_name: "XD-Prototypers",
+      },
+      {
+        course_id: "c06ca6f335cc8f35",
+        course_name: "Python for Data Science",
+        group_name: "PyData-Pros",
+      },
+      {
+        course_id: "c57a07f256300e3f",
+        course_name: "Database Design",
+        group_name: "DB-Designers",
+      },
+      {
+        course_id: "d340e9ec80ff737e",
+        course_name: "Figma Design",
+        group_name: "Figma-Creators",
+      },
+      {
+        course_id: "e84049d131c0925a",
+        course_name: "JavaScript Essentials",
+        group_name: "JS-Essentials",
+      },
+    ];
+
+    data.forEach(async (datum) => {
+      await insertChatRoom(
+        generateUUID(),
+        datum.group_name,
+        datum.course_id,
+        getMySQLTimestamp()
+      );
+    });
+    res.send("hey")
+  } catch (error) {
+    res.send(error);
+  }
 });
 
 app.listen(9021, () => {

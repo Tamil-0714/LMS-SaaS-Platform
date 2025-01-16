@@ -43,7 +43,9 @@ export const CourseContent = () => {
                     <div key={tag} className="text-lg">
                       {tag}
                     </div>
-                    <div className="text-sm">39m 40s</div>
+                    <div className="text-sm" style={{
+                      color:"#4CAF50"
+                    }}>39m 40s</div>
                   </div>
                 </div>
                 <div

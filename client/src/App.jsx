@@ -12,10 +12,13 @@ import Course from "./components/courses/Course";
 import ChatInterface from "./components/chatRoom/ChatUi";
 import ChatRoom from "./components/chatRoom/ChatRoom";
 import MyCourse from "./components/mycourses/MyCourse";
+import axios from "axios";
+import config from "./config";
 
 function App() {
   const [globUser, setGlobUser] = useState(null);
   const [currentComponet, setCurrentComponet] = useState("home");
+  const [enrolledCourses, setEnrolledCourses] = useState([]);
   const updateCodeComponetAsPresesnt = () => {
     setCurrentComponet("codePlayGround");
   };
@@ -28,6 +31,34 @@ function App() {
   const updateChatRoomComponetAsPresesnt = () => {
     setCurrentComponet("chatRoom");
   };
+  const updateMyCourseComponetAsPresesnt = () => {
+    setCurrentComponet("mycourses");
+  };
+
+  const fetchEnrolledCourses = async () => {
+    try {
+      const headers = {
+        "Content-Type": "application/json",
+        authorization: localStorage.getItem("authToken") || "",
+      };
+      const response = await axios.get(`${config.apiBaseUrl}/enrollments`, {
+        headers: headers,
+      });
+      const resData = response.data;
+      if (response.status === 200 && resData.data[0]) {
+        setEnrolledCourses(resData.data);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  useEffect(() => {
+    fetchEnrolledCourses();
+  }, []);
+
+  useEffect(() => {
+    console.log("from app.jsx : ", enrolledCourses);
+  }, [enrolledCourses]);
 
   return (
     <>
@@ -39,6 +70,7 @@ function App() {
           changeToHome={updateHomeComponetAsPresesnt}
           changeToCourse={updateCourseComponetAsPresesnt}
           changeToChatRoom={updateChatRoomComponetAsPresesnt}
+          changeToMyCourse={updateMyCourseComponetAsPresesnt}
         />
         <main style={{ width: "100%" }}>
           <SidebarTrigger />
@@ -53,8 +85,8 @@ function App() {
           {/* <Course/> */}
           {/* <CodeEditor /> */}
           {/* <ChatRoom userInfo={globUser} /> */}
-          <MyCourse />
-          {/* {currentComponet === "home" ? (
+
+          {currentComponet === "home" ? (
             <HomeComponetn />
           ) : currentComponet === "codePlayGround" ? (
             <CodeEditor />
@@ -62,10 +94,15 @@ function App() {
             // <VideoPlayer style={{ margin: "20px 0 0 40px" }} />
             <Course />
           ) : currentComponet === "chatRoom" ? (
-            <ChatRoom userInfo={globUser} />
+            <ChatRoom
+              userInfo={globUser}
+              globeEnrolledCourses={enrolledCourses}
+            />
+          ) : currentComponet === "mycourses" ? (
+            <MyCourse globeEnrolledCourses={enrolledCourses} />
           ) : (
             <div>no componet choosed</div>
-          )} */}
+          )}
           {/* home componet and other main frame comps. will be render here */}
         </main>
         <Toaster position="top-center" richColors />

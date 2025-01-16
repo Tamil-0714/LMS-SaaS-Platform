@@ -148,7 +148,7 @@ const CodeEditor = () => {
           <Select onValueChange={handleLanguageChange} defaultValue="c">
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Language" />
-            </SelectTrigger>
+            </SelectTrigger>  
             <SelectContent>
               <SelectItem value="c">C</SelectItem>
               <SelectItem value="cpp">c++</SelectItem>

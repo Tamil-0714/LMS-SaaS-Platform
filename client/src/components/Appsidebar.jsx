@@ -26,6 +26,7 @@ export function AppSidebar({
   changeToHome,
   changeToCourse,
   changeToChatRoom,
+  changeToMyCourse,
 }) {
   const items = [
     {
@@ -44,6 +45,7 @@ export function AppSidebar({
       title: "My Learnings",
       url: "#",
       icon: LibraryBig,
+      clickerFunction: changeToMyCourse,
     },
     {
       title: "Notes and Calendar",

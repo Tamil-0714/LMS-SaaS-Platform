@@ -22,7 +22,7 @@ router.get("/video/:id", async (req, res) => {
       return res.status(401).send("Unauthorized: Invalid token");
     }
 
-    console.log(videoId);
+
 
     const videoPath = path.resolve(__dirname, "..", "videos", `${videoId}.mp4`); // Adjust path to your video file
     const stat = fs.statSync(videoPath);

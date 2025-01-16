@@ -1,8 +1,8 @@
-import React from "react";
+
 import ChatInterface from "./ChatUi";
 import GroupsUI from "./GroupsUI";
 
-const ChatRoom = ({ userInfo }) => {
+const ChatRoom = ({ userInfo, globeEnrolledCourses }) => {
   const chatData = {
     name: "Sofia Davis",
     email: "m@example.com",
@@ -45,14 +45,20 @@ const ChatRoom = ({ userInfo }) => {
       },
     ],
   };
+
+ 
   return (
     <div
       style={{
         margin: "10px 0 0 20px ",
       }}
     >
-      <ChatInterface {...chatData} userInfo={userInfo} />
-       {/* <GroupsUI/> */}
+      <ChatInterface
+        {...chatData}
+        userInfo={userInfo}
+        globeEnrolledCourses={globeEnrolledCourses}
+      />
+      {/* <GroupsUI/> */}
     </div>
   );
 };

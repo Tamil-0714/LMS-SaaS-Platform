@@ -170,11 +170,54 @@ async function fetchEnrollment(userId) {
       "SELECT * FROM course where course_id IN (SELECT course_id FROM enrolement WHERE user_id = ? )";
     const params = [userId];
     const rows = await queryDB(query, params);
-    console.log(rows);
-
     return rows;
   } catch (error) {
     console.error(error);
+  }
+}
+
+async function insertChatRoom(chatRoomID, chatRoomName, courseId, timestamp) {
+  try {
+    const query =
+      "INSERT INTO chatRoom (chatroom_id, course_id, chatRoom_name, create_at) VALUES (?, ?, ?, ?)";
+    const params = [chatRoomID, courseId, chatRoomName, timestamp];
+    return await queryDB(query, params);
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+async function createUserChatRoom(userId, courseId, timestamp) {
+  try {
+    const query =
+      "INSERT INTO usersChatRoom (userId, chatroom_id, joined_at) SELECT ?, chatroom_id, ? FROM chatRoom WHERE course_id = ?";
+    const params = [userId, timestamp, courseId];
+    return await queryDB(query, params);
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+
+async function fetchChatRoomWithId(courseId) {
+  try {
+    const query = "SELECT * FROM chatRoom WHERE course_id = ?";
+    const params = [courseId];
+    return await queryDB(query, params);
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+async function fetchUnreadStatus(userId, chatRoomId) {
+  try {
+    const query =
+      "SELECT * FROM unread_message WHERE userId = ? AND chatroom_id = ?";
+    const params = [userId, chatRoomId];
+    return await queryDB(query, params);
+  } catch (error) {
+    console.error(error);
+    throw error;
   }
 }
 
@@ -185,5 +228,9 @@ module.exports = {
   updateUserName,
   insertCourseEnrollment,
   fetchEnrollment,
+  insertChatRoom,
+  createUserChatRoom,
+  fetchChatRoomWithId,
+  fetchUnreadStatus,
   // insertDummy
 };

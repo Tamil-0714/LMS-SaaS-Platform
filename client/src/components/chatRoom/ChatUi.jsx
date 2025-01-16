@@ -41,7 +41,13 @@ const ContextMenu = ({ x, y, onSelect, onDelete, onCopy, selectInnerHTML }) => (
   </div>
 );
 
-export default function ChatInterface({ name, email, propMessages, userInfo }) {
+export default function ChatInterface({
+  name,
+  email,
+  propMessages,
+  userInfo,
+  globeEnrolledCourses,
+}) {
   const [newMessage, setNewMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [selectedMessages, setSelectedMessages] = useState([]);
@@ -75,6 +81,7 @@ export default function ChatInterface({ name, email, propMessages, userInfo }) {
       //   ]);
       // }
     });
+   
     socket.on("connect_error", (err) => {
       console.error("Connection error:", err.message);
       // alert(`Connection failed: ${err.message}`);
@@ -87,7 +94,7 @@ export default function ChatInterface({ name, email, propMessages, userInfo }) {
   useEffect(() => {
     // setLocalUserInfo(userInfo);
   }, [userInfo]);
-
+ 
   useEffect(() => {
     setMessages(propMessages);
   }, [propMessages]);
@@ -268,7 +275,7 @@ export default function ChatInterface({ name, email, propMessages, userInfo }) {
             borderRight: "none",
           }}
         >
-          <GroupsUI />
+          <GroupsUI globeEnrolledCourses={globeEnrolledCourses}/>
         </div>
         <Card
           className="w-[580px] h-[600px] bg-zinc-950 border-zinc-800"

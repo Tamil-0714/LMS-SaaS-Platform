@@ -17,33 +17,33 @@ import { Label } from "../ui/label";
 import axios from "axios";
 import config from "@/config";
 
-const MyCourse = () => {
+const MyCourse = ({ globeEnrolledCourses }) => {
   const [notes, setNotes] = useState("");
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const notesAreaRef = useRef(null);
 
-  const fetchEnrolledCourses = async () => {
-    try {
-      const headers = {
-        "Content-Type": "application/json",
-        authorization: localStorage.getItem("authToken") || "",
-      };
-      const response = await axios.get(`${config.apiBaseUrl}/enrollments`, {
-        headers: headers,
-      });
-      const resData = response.data;
-      if (response.status === 200 && resData.data[0]) {
-        setEnrolledCourses(resData.data);
-      }
-    } catch (error) {}
-  };
-  useEffect(() => {
-    fetchEnrolledCourses();
-  }, []);
+  // const fetchEnrolledCourses = async () => {
+  //   try {
+  //     const headers = {
+  //       "Content-Type": "application/json",
+  //       authorization: localStorage.getItem("authToken") || "",
+  //     };
+  //     const response = await axios.get(`${config.apiBaseUrl}/enrollments`, {
+  //       headers: headers,
+  //     });
+  //     const resData = response.data;
+  //     if (response.status === 200 && resData.data[0]) {
+  //       setEnrolledCourses(resData.data);
+  //     }
+  //   } catch (error) {}
+  // };
+  // useEffect(() => {
+  //   fetchEnrolledCourses();
+  // }, []);
 
   useEffect(() => {
-    console.log("this is enrolled courses : ", enrolledCourses);
-  }, [enrolledCourses]);
+    setEnrolledCourses(globeEnrolledCourses);
+  }, [globeEnrolledCourses]);
 
   return (
     <div
@@ -132,55 +132,76 @@ const MyCourse = () => {
         >
           <Label className={"text-xl"}>Your other courses</Label>
         </div>
-
-        <Carousel
-          opts={{
-            align: "start",
-          }}
-          className="w-full"
-          style={{
-            width: "770px",
-          }}
-        >
-          <CarouselContent>
-            {Array.from({ length: 5 }).map((_, index) => (
-              <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
-                <div className="p-1">
-                  <Card>
-                    <CardContent className=" aspect-square  items-center justify-center p-6">
-                      <div className="course-img">
-                        <img
-                          style={{
-                            width: "120px",
-                          }}
-                          src={`http://localhost:8020/images/courseThumbnail/09b8bf0345b3258c`}
-                          class="img-fluid rounded-top"
-                          alt=""
-                        />
-                      </div>
-                      <h4
+        {enrolledCourses[0] ? (
+          <>
+            {" "}
+            <Carousel
+              opts={{
+                align: "start",
+              }}
+              className="w-full"
+              style={{
+                width: "770px",
+              }}
+            >
+              <CarouselContent>
+                {enrolledCourses.map((course, index) => (
+                  <CarouselItem
+                    key={index}
+                    className="md:basis-1/2 lg:basis-1/3"
+                  >
+                    <div className="p-1">
+                      <Card
                         style={{
-                          marginTop: "10px",
+                          cursor: "pointer",
                         }}
                       >
-                        this is course name
-                      </h4>
-                      <span
-                        style={{
-                          fontSize: "0.9rem",
-                        }}
-                      >
-                        Lorem, ipsum dolor sit amet consectetur adipisicing.
-                      </span>
-                    </CardContent>
-                  </Card>
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious />
-          <CarouselNext />
-        </Carousel>
+                        <CardContent className=" aspect-square  items-center justify-center p-6">
+                          <div className="course-img">
+                            <img
+                              style={{
+                                width: "120px",
+                              }}
+                              src={`${config.apiBaseUrl}${course.course_thumbnail}`}
+                              class="img-fluid rounded-top"
+                              alt=""
+                            />
+                          </div>
+                          <h4
+                            style={{
+                              marginTop: "10px",
+                            }}
+                          >
+                            {course.course_name} -{" "}
+                            <span
+                              style={{
+                                color: "#00ff7e",
+                              }}
+                            >
+                              {course.course_type}
+                            </span>
+                          </h4>
+                          <span
+                            className="line-clamp-2"
+                            style={{
+                              fontSize: "0.9rem",
+                            }}
+                          >
+                            {course.course_description}
+                          </span>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+          </>
+        ) : (
+          <>Loading ...</>
+        )}
       </div>
     </div>
   );

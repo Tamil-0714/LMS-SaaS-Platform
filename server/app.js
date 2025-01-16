@@ -11,6 +11,9 @@ const {
   updateUserName,
   insertCourseEnrollment,
   fetchEnrollment,
+  createUserChatRoom,
+  fetchChatRoomWithId,
+  fetchUnreadStatus,
 } = require("./DB/DB");
 const path = require("path");
 const fs = require("fs");
@@ -180,7 +183,18 @@ function getCurrentDateForMySQL() {
   // Combine into YYYY-MM-DD format
   return `${year}-${month}-${day}`;
 }
+function getMySQLTimestamp() {
+  const now = new Date();
 
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0"); // Months are zero-based
+  const day = String(now.getDate()).padStart(2, "0");
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  const seconds = String(now.getSeconds()).padStart(2, "0");
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
 app.post("/enrollcourse/:id", verifyToken, async (req, res) => {
   try {
     const enrollmentId = generateUUID();
@@ -196,9 +210,24 @@ app.post("/enrollcourse/:id", verifyToken, async (req, res) => {
       completionStatus
     );
     if (rows?.affectedRows === 1) {
-      res
-        .status(200)
-        .json({ userInfo: userId, success: true, duplicate: false });
+      try {
+        const chatRoom = await createUserChatRoom(
+          userId,
+          courseId,
+          getMySQLTimestamp()
+        );
+        console.log("this is chatroom : ", chatRoom);
+
+        if (chatRoom.affectedRows === 1) {
+          res
+            .status(200)
+            .json({ userInfo: userId, success: true, duplicate: false });
+        } else {
+          console.log("somewned wrong with insertion ");
+        }
+      } catch (error) {
+        throw error;
+      }
     }
   } catch (error) {
     if (error.code === "ER_DUP_ENTRY") {
@@ -226,6 +255,78 @@ app.get("/enrollments", verifyToken, async (req, res) => {
     res
       .status(500)
       .json({ message: "internal server error", success: false, data: [] });
+  }
+});
+
+// app.get("/groups/:id", verifyToken, async (req, res) => {
+//   try {
+//     const courseId = req.params.id;
+//     const rows = await fetchChatRoomWithId(courseId);
+//     if (rows && rows[0]) {
+//       rows.forEach(async (group) => {
+//         const status = await fetchUnreadStatus(
+//           req.user[0]?.userId,
+//           group.chatroom_id
+//         );
+//         if (status && status[0]) {
+//           group[unread] = true;
+//         } else {
+//           group[unread] = false;
+//         }
+//       });
+//       res
+//         .status(200)
+//         .json({ success: true, message: "groups found", data: rows });
+//     } else {
+//       res
+//         .status(200)
+//         .json({ success: false, message: "groups not found", data: rows });
+//     }
+//   } catch (error) {
+//     res
+//       .status(200)
+//       .json({ success: false, message: "internal server error", data: [] });
+//   }
+// });
+app.get("/groups/:id", verifyToken, async (req, res) => {
+  try {
+    const courseId = req.params.id;
+    const rows = await fetchChatRoomWithId(courseId);
+
+    if (rows && rows[0]) {
+      // Use Promise.all with map to wait for all async operations
+      console.log("before update : ", req.user[0]?.userId, "grp id : ",rows[0].chatroom_id);
+
+      const updatedRows = await Promise.all(
+        rows.map(async (group) => {
+          const status = await fetchUnreadStatus(
+            req.user[0]?.userId,
+            group.chatroom_id
+          );
+          // Add the unread field to the group object
+          group.unread = status && status[0] ? true : false;
+          return group; // Return the updated group
+        })
+      );
+
+      res.status(200).json({
+        success: true,
+        message: "groups found",
+        data: updatedRows,
+      });
+    } else {
+      res.status(200).json({
+        success: false,
+        message: "groups not found",
+        data: rows,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "internal server error",
+      data: [],
+    });
   }
 });
 
