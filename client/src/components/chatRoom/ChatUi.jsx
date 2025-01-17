@@ -57,18 +57,30 @@ export default function ChatInterface({
 
   useEffect(() => {
     // Listen for group messages from the server
-    socket.on("groupMessage", ({ groupName, message, sender }) => {
-      console.log(`Received message in group ${groupName}:`, message);
+    socket.on("groupMessage", ({ groupId, message, sender, messageId }) => {
+      console.log(`Received message in group ${groupId}:`, message);
       console.log("this is sender : ", sender);
       console.log("this is local sender : ", userInfo);
       setMessages((prev) => {
         const previousMessages = prev || []; // Use an empty array if prev is undefined
         if (sender === userInfo?.userId) {
-          return [...previousMessages, { text: message, sent: true }];
+          return [
+            ...previousMessages,
+            {
+              text: message,
+              sent: true,
+              messageId: messageId,
+            },
+          ];
         } else {
           return [
             ...previousMessages,
-            { text: message, sent: false, sender: sender },
+            {
+              text: message,
+              sent: false,
+              sender: sender,
+              messageId: messageId,
+            },
           ];
         }
       });
@@ -81,7 +93,7 @@ export default function ChatInterface({
       //   ]);
       // }
     });
-   
+
     socket.on("connect_error", (err) => {
       console.error("Connection error:", err.message);
       // alert(`Connection failed: ${err.message}`);
@@ -91,13 +103,79 @@ export default function ChatInterface({
       socket.off("groupMessage");
     };
   }, [userInfo]);
+
+  useEffect(() => {
+    // Emit the request for old messages
+    if (currentGroup) {
+      socket.emit("oldMessages", {
+        groupId: currentGroup,
+      });
+      setMessages([]);
+
+      // Remove the old listener before adding a new one
+      socket.off("oldMessagesResponse");
+
+      socket.on("oldMessagesResponse", ({ groupId, messages }) => {
+        console.log(`Old messages for group ${groupId}:`, messages);
+        /*
+         [
+            {
+                "message_id": 2,
+                "chatroom_id": "c01f14eaa5f23df0",
+                "userId": "tamil_7",
+                "content": "nice",
+                "sent_at": "2025-01-17T15:21:49.000Z"
+            },
+            {
+                "message_id": 3,
+                "chatroom_id": "c01f14eaa5f23df0",
+                "userId": "tamil_7",
+                "content": "hey",
+                "sent_at": "2025-01-17T15:37:31.000Z"
+            }
+        ]
+         */
+
+        messages.forEach((message) => {
+          setMessages((prev) => {
+            const previousMessages = prev || [];
+            if (message.userId === userInfo?.userId) {
+              return [
+                ...previousMessages,
+                {
+                  text: message.content,
+                  sent: true,
+                  messageId: message.message_id,
+                },
+              ];
+            } else {
+              return [
+                ...previousMessages,
+                {
+                  text: message.content,
+                  sent: false,
+                  sender: message.userId,
+                  messageId: message.message_id,
+                },
+              ];
+            }
+          });
+        });
+      });
+    }
+    // Optional: Clean up when the component unmounts
+    return () => {
+      socket.off("oldMessagesResponse");
+    };
+  }, [currentGroup, userInfo]);
+
   useEffect(() => {
     // setLocalUserInfo(userInfo);
   }, [userInfo]);
- 
-  useEffect(() => {
-    setMessages(propMessages);
-  }, [propMessages]);
+
+  // useEffect(() => {
+  //   setMessages(propMessages);
+  // }, [propMessages]);
   useEffect(() => {
     console.log("on : ", messages);
 
@@ -121,14 +199,14 @@ export default function ChatInterface({
         chatContainerRef.current.scrollHeight;
     }
   };
-  const joinGroup = (groupName) => {
-    if (currentGroup === groupName) {
-      console.log(`Already in group: ${groupName}`);
+  const joinGroup = (groupId) => {
+    if (currentGroup === groupId) {
+      console.log(`Already in group: ${groupId}`);
       return; // Prevent redundant joins
     }
-    setCurrentGroup(groupName);
-    socket.emit("joinGroup", groupName);
-    console.log(`Joined group: ${groupName}`);
+    setCurrentGroup(groupId);
+    socket.emit("joinGroup", groupId);
+    console.log(`Joined group: ${groupId}`);
   };
   const sendMessage = async (message) => {
     if (!currentGroup) {
@@ -138,14 +216,14 @@ export default function ChatInterface({
 
     // Send message to the backend for the current group
     socket.emit("sendMessageToGroup", {
-      groupName: currentGroup,
+      groupId: currentGroup,
       message: newMessage,
     });
 
     // Update UI locally
     // setMessages((prev) => [
     //   ...prev,
-    //   { groupName: currentGroup, text: newMessage, sent: true },
+    //   { groupId: currentGroup, text: newMessage, sent: true },
     // ]);
     setNewMessage("");
   };
@@ -252,13 +330,13 @@ export default function ChatInterface({
 
   return (
     <>
-      <button
+      {/* <button
         onClick={() => {
           joinGroup("niceGrp");
         }}
       >
         join grp
-      </button>
+      </button> */}
       <div
         className="h-[600px]"
         style={{
@@ -275,137 +353,143 @@ export default function ChatInterface({
             borderRight: "none",
           }}
         >
-          <GroupsUI globeEnrolledCourses={globeEnrolledCourses}/>
+          <GroupsUI
+            setCurrentGroup={setCurrentGroup}
+            globeEnrolledCourses={globeEnrolledCourses}
+            joinGroup={joinGroup}
+          />
         </div>
-        <Card
-          className="w-[580px] h-[600px] bg-zinc-950 border-zinc-800"
-          onClick={() => {
-            setContextMenu(null);
-          }}
-        >
-          <div className="flex items-center gap-3 p-4 border-b border-zinc-800">
-            <Avatar>
-              <AvatarImage src="/placeholder.svg" />
-              <AvatarFallback>SD</AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <h3 className="font-semibold text-white">{name}</h3>
-              <p className="text-sm text-zinc-400">{email}</p>
-            </div>
-            {selectedMessages.length > 0 ? (
-              <>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="text-zinc-400"
-                  onClick={handleCopySelected}
-                >
-                  <Copy className="h-5 w-5" />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="text-zinc-400"
-                  onClick={handleDeleteSelected}
-                >
-                  <Trash2 className="h-5 w-5" />
-                </Button>
-              </>
-            ) : (
-              <Button size="icon" variant="ghost" className="text-zinc-400">
-                <Plus className="h-5 w-5" />
-              </Button>
-            )}
-          </div>
-
-          <div
-            ref={chatContainerRef}
-            className="chatUIContainer flex-1 p-4 overflow-y-auto h-[calc(100%-140px)] space-y-4"
-          >
-            {messages?.map((message, index) => (
-              <div
-                key={message.messageId}
-                onContextMenu={(e) =>
-                  handleContextMenu(e, message.messageId, selectedMessages)
-                }
-                className={`flex ${
-                  message.sent ? "justify-end" : "justify-start"
-                }`}
-                onClick={() =>
-                  handleSelectMessageByClicking(
-                    message.messageId,
-                    selectedMessages
-                  )
-                }
-              >
-                {!message.sent ? (
+        {currentGroup ? (
+          <>
+            <Card
+              className="w-[580px] h-[600px] bg-zinc-950 border-zinc-800"
+              onClick={() => {
+                setContextMenu(null);
+              }}
+            >
+              <div className="flex items-center gap-3 p-4 border-b border-zinc-800">
+                <Avatar>
+                  <AvatarImage src="/placeholder.svg" />
+                  <AvatarFallback>SD</AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-white">{name}</h3>
+                  <p className="text-sm text-zinc-400">{email}</p>
+                </div>
+                {selectedMessages.length > 0 ? (
                   <>
-                    <div
-                      style={{
-                        position: "relative",
-                        bottom: "10px",
-                      }}
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="text-zinc-400"
+                      onClick={handleCopySelected}
                     >
-                      <Avatar
-                        className={"w-[30px] h-[30px]"}
-                        style={{
-                          marginTop: "16px",
-                        }}
-                      >
-                        <AvatarImage src="/placeholder.svg" />
-                        <AvatarFallback>SD</AvatarFallback>
-                      </Avatar>
-                    </div>
+                      <Copy className="h-5 w-5" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="text-zinc-400"
+                      onClick={handleDeleteSelected}
+                    >
+                      <Trash2 className="h-5 w-5" />
+                    </Button>
                   </>
                 ) : (
-                  <></>
+                  <Button size="icon" variant="ghost" className="text-zinc-400">
+                    <Plus className="h-5 w-5" />
+                  </Button>
                 )}
-                <div
-                  className={`rounded-lg px-4 py-2 max-w-[80%] ${
-                    message.sent
-                      ? "bg-white text-zinc-900 recivers-message"
-                      : "bg-zinc-800 text-zinc-100 senders-messafe"
-                  } ${
-                    selectedMessages.includes(message.messageId)
-                      ? "opacity-50"
-                      : ""
-                  }`}
-                >
-                  {!message.sent ? (
-                    <>
-                      <p
-                        style={{
-                          color: "yellow",
-                          position: "relative",
-                          top: "-8px",
-                          fontSize: "0.8em",
-                          left: "-9px",
-                        }}
-                      >
-                        {message.sender || "user not found"}
-                      </p>
-                    </>
-                  ) : (
-                    <></>
-                  )}
-                  {!message.sent ? (
-                    <>
-                      <div
-                        className="replay-icon"
-                        style={{
-                          position: "absolute",
-                          right: "-30px",
-                          cursor: "pointer",
-                          top: "50%",
-                        }}
-                      >
-                        <ReplyAll />
-                      </div>
-                    </>
-                  ) : (
-                    <></>
-                  )}
-                  {/* {!message.sent ? (
+              </div>
+
+              <div
+                ref={chatContainerRef}
+                className="chatUIContainer flex-1 p-4 overflow-y-auto h-[calc(100%-140px)] space-y-4"
+              >
+                {messages?.map((message, index) => (
+                  <div
+                    key={message.messageId}
+                    onContextMenu={(e) =>
+                      handleContextMenu(e, message.messageId, selectedMessages)
+                    }
+                    className={`flex ${
+                      message.sent ? "justify-end" : "justify-start"
+                    }`}
+                    onClick={() =>
+                      handleSelectMessageByClicking(
+                        message.messageId,
+                        selectedMessages
+                      )
+                    }
+                  >
+                    {!message.sent ? (
+                      <>
+                        <div
+                          style={{
+                            position: "relative",
+                            bottom: "10px",
+                          }}
+                        >
+                          <Avatar
+                            className={"w-[30px] h-[30px]"}
+                            style={{
+                              marginTop: "16px",
+                            }}
+                          >
+                            <AvatarImage src="/placeholder.svg" />
+                            <AvatarFallback>SD</AvatarFallback>
+                          </Avatar>
+                        </div>
+                      </>
+                    ) : (
+                      <></>
+                    )}
+                    <div
+                      className={`rounded-lg px-4 py-2 max-w-[80%] ${
+                        message.sent
+                          ? "bg-white text-zinc-900 recivers-message"
+                          : "bg-zinc-800 text-zinc-100 senders-messafe"
+                      } ${
+                        selectedMessages.includes(message.messageId)
+                          ? "opacity-50"
+                          : ""
+                      }`}
+                    >
+                      {!message.sent ? (
+                        <>
+                          <p
+                            style={{
+                              color: "yellow",
+                              position: "relative",
+                              top: "-8px",
+                              fontSize: "0.8em",
+                              left: "-9px",
+                            }}
+                          >
+                            {message.sender || "user not found"}
+                          </p>
+                        </>
+                      ) : (
+                        <></>
+                      )}
+                      {!message.sent ? (
+                        <>
+                          <div
+                            className="replay-icon"
+                            style={{
+                              position: "absolute",
+                              right: "-30px",
+                              cursor: "pointer",
+                              top: "50%",
+                            }}
+                          >
+                            <ReplyAll />
+                          </div>
+                        </>
+                      ) : (
+                        <></>
+                      )}
+                      {/* {!message.sent ? (
                   <>
                     <p style={{
                           color: "yellow",
@@ -418,49 +502,68 @@ export default function ChatInterface({
                 ) : (
                   <></>
                 )} */}
-                  {/* <p>nice</p> */}
-                  {message.text}
-                  {selectedMessages.includes(message.messageId) && (
-                    <Check className="inline-block ml-2 h-4 w-4 text-green-500" />
-                  )}
-                </div>
+                      {/* <p>nice</p> */}
+                      {message.text}
+                      {selectedMessages.includes(message.messageId) && (
+                        <Check className="inline-block ml-2 h-4 w-4 text-green-500" />
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {/* <div ref={messagesEndRef} /> */}
               </div>
-            ))}
-            {/* <div ref={messagesEndRef} /> */}
-          </div>
 
-          <form
-            onSubmit={handleSubmit}
-            className="p-4 border-t border-zinc-800"
-            style={{ paddingTop: "9px" }}
-          >
-            <div className="flex gap-2">
-              <Input
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type your message..."
-                className="flex-1 bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-400"
-              />
-              <Button
-                type="submit"
-                size="icon"
-                className="bg-white hover:bg-zinc-200"
+              <form
+                onSubmit={handleSubmit}
+                className="p-4 border-t border-zinc-800"
+                style={{ paddingTop: "9px" }}
               >
-                <Send className="h-4 w-4 text-zinc-900" />
-              </Button>
-            </div>
-          </form>
-          {contextMenu && (
-            <ContextMenu
-              x={contextMenu.x}
-              y={contextMenu.y}
-              onSelect={() => handleSelectMessage(contextMenu.messageId)}
-              onDelete={() => handleDeleteMessage(contextMenu.messageId)}
-              onCopy={() => handleCopyMessage(contextMenu.messageId)}
-              selectInnerHTML={contextMenu.selectInnerHTML}
-            />
-          )}
-        </Card>
+                <div className="flex gap-2">
+                  <Input
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type your message..."
+                    className="flex-1 bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-400"
+                  />
+                  <Button
+                    type="submit"
+                    size="icon"
+                    className="bg-white hover:bg-zinc-200"
+                  >
+                    <Send className="h-4 w-4 text-zinc-900" />
+                  </Button>
+                </div>
+              </form>
+              {contextMenu && (
+                <ContextMenu
+                  x={contextMenu.x}
+                  y={contextMenu.y}
+                  onSelect={() => handleSelectMessage(contextMenu.messageId)}
+                  onDelete={() => handleDeleteMessage(contextMenu.messageId)}
+                  onCopy={() => handleCopyMessage(contextMenu.messageId)}
+                  selectInnerHTML={contextMenu.selectInnerHTML}
+                />
+              )}
+            </Card>
+          </>
+        ) : (
+          <>
+            <Card
+              className="w-[580px] h-[600px] bg-zinc-950 border-zinc-800"
+              onClick={() => {
+                setContextMenu(null);
+              }}
+            >
+              <div class="chat-placeholder">
+                <h2>Select a group to get started</h2>
+                <p>
+                  Conversations live here. Choose a group and let learnings as
+                  deep as sea
+                </p>
+              </div>
+            </Card>
+          </>
+        )}
       </div>
     </>
   );

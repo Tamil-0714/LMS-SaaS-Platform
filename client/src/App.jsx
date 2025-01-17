@@ -60,6 +60,11 @@ function App() {
     console.log("from app.jsx : ", enrolledCourses);
   }, [enrolledCourses]);
 
+  useEffect(()=>{
+    console.log("is changing : ",globUser);
+    
+  }, [globUser])
+
   return (
     <>
       {/* <OAuth /> */}

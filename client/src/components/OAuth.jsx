@@ -14,6 +14,8 @@ const verifyAuthToken = async (authToken, setUser, setGlobUser) => {
     "Content-Type": "application/json",
     authorization: authToken,
   };
+  console.log("auth token is verifying");
+
   try {
     const res = await axios.get(`${config.apiBaseUrl}/api/verify/auth`, {
       headers: headers,
@@ -159,7 +161,6 @@ const OAuth = ({ style, setGlobUser }) => {
         setUserNamePopUp(false);
         setGlobUser([{ ...user, userId: userName }]);
         console.log("after username : ", user);
-        
       }
     } catch (error) {
       console.error(error);

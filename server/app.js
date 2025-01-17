@@ -14,6 +14,9 @@ const {
   createUserChatRoom,
   fetchChatRoomWithId,
   fetchUnreadStatus,
+  fetchUserChatRoom,
+  insertMessage,
+  fetchMessageWithGroupId,
 } = require("./DB/DB");
 const path = require("path");
 const fs = require("fs");
@@ -288,6 +291,36 @@ app.get("/enrollments", verifyToken, async (req, res) => {
 //       .json({ success: false, message: "internal server error", data: [] });
 //   }
 // });
+const getRelativeTime = (timestamp) => {
+  const now = new Date(); // Current time
+  const past = new Date(timestamp); // Convert timestamp to Date object
+  const diffInMs = now - past; // Difference in milliseconds
+
+  const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+  const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+  const diffInWeeks = Math.floor(diffInMs / (1000 * 60 * 60 * 24 * 7));
+  const diffInMonths = Math.floor(diffInMs / (1000 * 60 * 60 * 24 * 30));
+  const diffInYears = Math.floor(diffInMs / (1000 * 60 * 60 * 24 * 365));
+
+  if (diffInMinutes < 1) {
+    return "just now";
+  } else if (diffInMinutes < 60) {
+    return `${diffInMinutes} minutes ago`;
+  } else if (diffInHours < 24) {
+    return `${diffInHours} hours ago`;
+  } else if (diffInDays === 1) {
+    return `yesterday`;
+  } else if (diffInDays < 7) {
+    return `${diffInDays} days ago`;
+  } else if (diffInWeeks < 5) {
+    return `${diffInWeeks} weeks ago`;
+  } else if (diffInMonths < 12) {
+    return `${diffInMonths} months ago`;
+  } else {
+    return `${diffInYears} years ago`;
+  }
+};
 app.get("/groups/:id", verifyToken, async (req, res) => {
   try {
     const courseId = req.params.id;
@@ -295,7 +328,12 @@ app.get("/groups/:id", verifyToken, async (req, res) => {
 
     if (rows && rows[0]) {
       // Use Promise.all with map to wait for all async operations
-      console.log("before update : ", req.user[0]?.userId, "grp id : ",rows[0].chatroom_id);
+      // console.log(
+      //   "before update : ",
+      //   req.user[0]?.userId,
+      //   "grp id : ",
+      //   rows[0].chatroom_id
+      // );
 
       const updatedRows = await Promise.all(
         rows.map(async (group) => {
@@ -305,6 +343,8 @@ app.get("/groups/:id", verifyToken, async (req, res) => {
           );
           // Add the unread field to the group object
           group.unread = status && status[0] ? true : false;
+          group.timestamp =
+            status && status[0] ? getRelativeTime(status[0].sent_time) : false;
           return group; // Return the updated group
         })
       );
@@ -374,10 +414,60 @@ io.use(verifyTokenSocket);
 
 const connectedUsers = new Map();
 
+const userJoinedGroup = async (user, groupId) => {
+  try {
+    const rows = await fetchUserChatRoom(user, groupId);
+    if (rows && rows[0]) {
+      return true;
+    }
+    return false;
+  } catch (error) {
+    return false;
+  }
+};
+
 io.on("connection", (socket) => {
   const thisUser = socket.user.authId;
 
   // Add user to connectedUsers if not already present
+  console.log(
+    `user ${socket.user.userId} connected with socket id ${socket.id}`
+  );
+  const oldMessage = [
+    { text: "1", sent: false, messageId: 100 },
+    { text: "2", sent: false, messageId: 105 },
+    {
+      text: "3",
+      sent: true,
+      messageId: 20,
+    },
+    { text: "4", sent: false, messageId: 324 },
+    { text: "5", sent: true, messageId: 41 },
+    { text: "6", sent: true, messageId: 52 },
+    { text: "7", sent: false, messageId: 64 },
+    { text: "8", sent: false, messageId: 27 },
+    {
+      text: "9",
+      sent: true,
+      messageId: 97,
+    },
+  ];
+
+  socket.on("oldMessages", async ({ groupId }) => {
+    console.log(
+      `this user ${thisUser} requesting old message for this group `,
+      groupId
+    );
+    try {
+      if (await userJoinedGroup(socket.user.userId, groupId)) {
+        const oldMessages = await fetchMessageWithGroupId(groupId);
+        console.log("message emiting ");
+
+        socket.emit("oldMessagesResponse", { groupId, messages: oldMessages });
+      }
+    } catch (error) {}
+  });
+
   if (!connectedUsers.has(thisUser)) {
     connectedUsers.set(thisUser, {
       user: thisUser,
@@ -390,35 +480,51 @@ io.on("connection", (socket) => {
   userData.sockets.push(socket.id);
 
   // Listen for a user joining a group
-  socket.on("joinGroup", (groupName) => {
-    if (!userData.joinedGroups.includes(groupName)) {
-      console.log(`${thisUser} joined group: ${groupName}`);
-      userData.joinedGroups.push(groupName);
+  socket.on("joinGroup", (groupId) => {
+    if (!userData.joinedGroups.includes(groupId)) {
+      console.log(`${thisUser} joined group: ${groupId}`);
+      userData.joinedGroups = [];
+      userData.joinedGroups.push(groupId);
     } else {
-      console.log(`${thisUser} is already in group: ${groupName}`);
+      console.log(`${thisUser} is already in group: ${groupId}`);
     }
+    console.log("on Join : ", connectedUsers);
   });
   // Handle receiving a message for a group
-  socket.on("sendMessageToGroup", ({ groupName, message }) => {
-    console.log(`Message to group ${groupName} from ${thisUser}:`, message);
-
-    // Find all users in the group
-    connectedUsers.forEach((user, userId) => {
-      if (user.joinedGroups.includes(groupName)) {
-        // Broadcast the message to all sockets of this user
-        user.sockets.forEach((socketId) => {
-          io.to(socketId).emit("groupMessage", {
-            groupName,
-            message,
-            sender: socket.user.userId,
-          });
+  socket.on("sendMessageToGroup", async ({ groupId, message }) => {
+    console.log(`Message to group ${groupId} from ${thisUser}:`, message);
+    const timestamp = getMySQLTimestamp();
+    const userId = socket.user.userId;
+    try {
+      const rows = await insertMessage(groupId, userId, message, timestamp);
+      if (rows.affectedRows === 1) {
+        connectedUsers.forEach((user, userId) => {
+          if (user.joinedGroups.includes(groupId)) {
+            // Broadcast the message to all sockets of this user
+            user.sockets.forEach((socketId) => {
+              io.to(socketId).emit("groupMessage", {
+                groupId,
+                message,
+                sender: socket.user.userId,
+                messageId: rows.insertId,
+              });
+            });
+          }
         });
       }
-    });
+    } catch (error) {
+      console.error("Error at sendMessageToGroup : ", error);
+    }
+    // Find all users in the group
+
+    console.log("After message senet : ", connectedUsers);
   });
   // Handle user disconnecting
   socket.on("disconnect", () => {
-    console.log(`Socket disconnected: ${socket.id} (User: ${thisUser})`);
+    console.log(
+      `user ${socket.user.userId} disconnected with socket id `,
+      socket.id
+    );
 
     // Remove this socket from the user's sockets array
     userData.sockets = userData.sockets.filter((id) => id !== socket.id);

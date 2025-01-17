@@ -1,3 +1,33 @@
+.chat-placeholder {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  height: 100%;
+  background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+  color: #ccc;
+  font-family: 'Poppins', sans-serif;
+}
+
+.chat-placeholder h2 {
+  font-size: 22px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+.chat-placeholder p {
+  font-size: 16px;
+  color: #aaa;
+  max-width: 400px;
+  line-height: 1.5;
+}
+
+.chat-placeholder p:hover {
+  color: #fff; /* A subtle hover effect for some interactivity */
+}
+
 /* Scrollbar Styling */
 .chatUIContainer::-webkit-scrollbar {
   width: 2px; /* Adjust the width of the scrollbar */
@@ -9,6 +39,7 @@
   border-radius: 10px; /* Rounded track */
   display: none;
 }
+
 
 .chatUIContainer::-webkit-scrollbar-thumb {
   background-color: #b0b0b0; /* Neutral color to match UI */

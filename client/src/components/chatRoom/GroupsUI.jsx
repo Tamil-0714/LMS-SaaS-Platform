@@ -11,7 +11,11 @@ import axios from "axios";
 import { ChevronDown, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 
-export default function GroupsUI({ globeEnrolledCourses }) {
+export default function GroupsUI({
+  globeEnrolledCourses,
+  setCurrentGroup,
+  joinGroup,
+}) {
   const messages = [
     { id: 1, status: "Unread Message", time: "34m", unread: true },
     { id: 2, status: "Unread Message", time: "34m", unread: true },
@@ -97,6 +101,13 @@ export default function GroupsUI({ globeEnrolledCourses }) {
         {groups.map((group, index) => (
           <div
             key={group.chatroom_id}
+            style={{
+              cursor: "pointer",
+            }}
+            onClick={() => {
+              joinGroup(group.chatroom_id);
+              setCurrentGroup(group.chatroom_id);
+            }}
             className="flex items-center justify-between p-3 hover:bg-muted/50 transition-colors"
           >
             <div className="flex items-center gap-3">
@@ -110,11 +121,16 @@ export default function GroupsUI({ globeEnrolledCourses }) {
               <div>
                 <h3 className="font-semibold">{group.chatRoom_name}</h3>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">
-                    {group.unread? "Unread Message":""}
+                  <span
+                    className="text-sm text-muted-foreground"
+                    style={{
+                      color: "orange",
+                    }}
+                  >
+                    {group.unread ? "Unread Message" : ""}
                   </span>
                   <span className="text-sm text-muted-foreground">
-                    · {group.unread? "Time":""}
+                    · {group.unread ? group.timestamp : ""}
                   </span>
                 </div>
               </div>

@@ -220,6 +220,39 @@ async function fetchUnreadStatus(userId, chatRoomId) {
     throw error;
   }
 }
+async function fetchUserChatRoom(userId, chatRoomId) {
+  try {
+    const query =
+      "SELECT * FROM usersChatRoom WHERE userId = ? AND chatroom_id = ?";
+    const params = [userId, chatRoomId];
+    return await queryDB(query, params);
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+async function insertMessage(chatRoomId, userId, content, sendAt) {
+  try {
+    const query =
+      "INSERT INTO `messages` (chatroom_id, userId, content, sent_at) VALUES ( ?, ?, ?, ?)";
+    const params = [chatRoomId, userId, content, sendAt];
+    return await queryDB(query, params);
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+async function fetchMessageWithGroupId(chatRoomId) {
+  try {
+    const query = "SELECT * FROM messages WHERE chatroom_id = ?";
+    const params = [chatRoomId];
+    return await queryDB(query, params);
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+
 
 module.exports = {
   insertUserAuthId,
@@ -232,5 +265,8 @@ module.exports = {
   createUserChatRoom,
   fetchChatRoomWithId,
   fetchUnreadStatus,
+  fetchUserChatRoom,
+  insertMessage,
+  fetchMessageWithGroupId,
   // insertDummy
 };
