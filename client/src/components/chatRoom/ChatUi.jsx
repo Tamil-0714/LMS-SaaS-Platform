@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 // import { Plus, Send } from "lucide-react";
 import { Plus, Send, Copy, Trash2, Check, ReplyAll } from "lucide-react";
@@ -53,46 +54,63 @@ export default function ChatInterface({
   const [selectedMessages, setSelectedMessages] = useState([]);
   const [contextMenu, setContextMenu] = useState(null);
   const [currentGroup, setCurrentGroup] = useState(null);
+  const [currentGroupName, setCurrentGroupName] = useState("");
+  const [groupedMessages, setGroupedMessages] = useState({});
   // const [localUserInfo, setLocalUserInfo] = useState([]);
 
   useEffect(() => {
     // Listen for group messages from the server
-    socket.on("groupMessage", ({ groupId, message, sender, messageId }) => {
-      console.log(`Received message in group ${groupId}:`, message);
-      console.log("this is sender : ", sender);
-      console.log("this is local sender : ", userInfo);
-      setMessages((prev) => {
-        const previousMessages = prev || []; // Use an empty array if prev is undefined
-        if (sender === userInfo?.userId) {
-          return [
+    socket.on(
+      "groupMessage",
+      ({ groupId, message, sender, messageId, sent_at }) => {
+        console.log(`Received message in group ${groupId}:`, message);
+        console.log("this is sender : ", sender);
+        console.log("this is local sender : ", userInfo);
+        setMessages((prev) => {
+          const previousMessages = prev || [];
+          const newMessages = [
             ...previousMessages,
             {
               text: message,
-              sent: true,
+              sent: sender === userInfo?.userId,
               messageId: messageId,
+              sent_at: sent_at,
+              sender: sender !== userInfo?.userId ? sender : undefined,
             },
           ];
-        } else {
-          return [
-            ...previousMessages,
-            {
-              text: message,
-              sent: false,
-              sender: sender,
-              messageId: messageId,
-            },
-          ];
-        }
-      });
-      // if (sender === userInfo?.userId) {
-      //   setMessages((prev) => [...prev, { text: message, sent: true }]);
-      // } else {
-      //   setMessages((prev) => [
-      //     ...prev,
-      //     { text: message, sent: false, sender: sender },
-      //   ]);
-      // }
-    });
+
+          // Schedule scroll after state update
+          setTimeout(scrollToBottom, 100);
+          return newMessages;
+        });
+        // setMessages((prev) => {
+        //   const previousMessages = prev || []; // Use an empty array if prev is undefined
+        //   setTimeout(scrollToBottom, 100);
+        //   if (sender === userInfo?.userId) {
+        //     return [
+        //       ...previousMessages,
+        //       {
+        //         text: message,
+        //         sent: true,
+        //         messageId: messageId,
+        //         sent_at: sent_at,
+        //       },
+        //     ];
+        //   } else {
+        //     return [
+        //       ...previousMessages,
+        //       {
+        //         text: message,
+        //         sent: false,
+        //         sender: sender,
+        //         messageId: messageId,
+        //         sent_at: sent_at,
+        //       },
+        //     ];
+        //   }
+        // });
+      }
+    );
 
     socket.on("connect_error", (err) => {
       console.error("Connection error:", err.message);
@@ -111,56 +129,49 @@ export default function ChatInterface({
         groupId: currentGroup,
       });
       setMessages([]);
+      isFirstRender.current = true;
 
       // Remove the old listener before adding a new one
       socket.off("oldMessagesResponse");
 
-      socket.on("oldMessagesResponse", ({ groupId, messages }) => {
-        console.log(`Old messages for group ${groupId}:`, messages);
-        /*
-         [
-            {
-                "message_id": 2,
-                "chatroom_id": "c01f14eaa5f23df0",
-                "userId": "tamil_7",
-                "content": "nice",
-                "sent_at": "2025-01-17T15:21:49.000Z"
-            },
-            {
-                "message_id": 3,
-                "chatroom_id": "c01f14eaa5f23df0",
-                "userId": "tamil_7",
-                "content": "hey",
-                "sent_at": "2025-01-17T15:37:31.000Z"
-            }
-        ]
-         */
-
-        messages.forEach((message) => {
-          setMessages((prev) => {
-            const previousMessages = prev || [];
-            if (message.userId === userInfo?.userId) {
-              return [
-                ...previousMessages,
-                {
-                  text: message.content,
-                  sent: true,
-                  messageId: message.message_id,
-                },
-              ];
-            } else {
-              return [
-                ...previousMessages,
-                {
-                  text: message.content,
-                  sent: false,
-                  sender: message.userId,
-                  messageId: message.message_id,
-                },
-              ];
-            }
-          });
-        });
+      socket.on("oldMessagesResponse", ({ groupId, messages: oldMessages }) => {
+        console.log(`Old messages for group ${groupId}:`, oldMessages);
+        const formattedMessages = oldMessages.map((message) => ({
+          text: message.content,
+          sent: message.userId === userInfo?.userId,
+          messageId: message.message_id,
+          sent_at: message.sent_at,
+          sender:
+            message.userId !== userInfo?.userId ? message.userId : undefined,
+        }));
+        setMessages(formattedMessages);
+        // messages.forEach((message) => {
+        //   setMessages((prev) => {
+        //     const previousMessages = prev || [];
+        //     if (message.userId === userInfo?.userId) {
+        //       return [
+        //         ...previousMessages,
+        //         {
+        //           text: message.content,
+        //           sent: true,
+        //           messageId: message.message_id,
+        //           sent_at: message.sent_at,
+        //         },
+        //       ];
+        //     } else {
+        //       return [
+        //         ...previousMessages,
+        //         {
+        //           text: message.content,
+        //           sent: false,
+        //           sender: message.userId,
+        //           messageId: message.message_id,
+        //           sent_at: message.sent_at,
+        //         },
+        //       ];
+        //     }
+        //   });
+        // });
       });
     }
     // Optional: Clean up when the component unmounts
@@ -168,7 +179,21 @@ export default function ChatInterface({
       socket.off("oldMessagesResponse");
     };
   }, [currentGroup, userInfo]);
+  const chatContainerRef = useRef(null);
+  const isFirstRender = useRef(true);
 
+  const scrollToBottom = useCallback(() => {
+    if (chatContainerRef.current) {
+      const scrollHeight = chatContainerRef.current.scrollHeight;
+      const height = chatContainerRef.current.clientHeight;
+      const maxScrollTop = scrollHeight - height;
+
+      chatContainerRef.current.scrollTo({
+        top: maxScrollTop,
+        behavior: "smooth",
+      });
+    }
+  }, []);
   useEffect(() => {
     // setLocalUserInfo(userInfo);
   }, [userInfo]);
@@ -176,12 +201,33 @@ export default function ChatInterface({
   // useEffect(() => {
   //   setMessages(propMessages);
   // }, [propMessages]);
+  // useEffect(() => {
+  //   console.log("on : ", messages);
+  //   setGroupedMessages(groupMessagesByDate(messages));
+  //   scrollToBottom();
+  // }, [messages]);
+
   useEffect(() => {
-    console.log("on : ", messages);
+    if (messages.length > 0) {
+      console.log("Messages updated:", messages);
+      setGroupedMessages(groupMessagesByDate(messages));
 
-    scrollToBottom();
-  }, [messages]);
-
+      // Add a small delay to ensure DOM has updated
+      const scrollTimer = setTimeout(() => {
+        if (!isFirstRender.current) {
+          scrollToBottom();
+        } else {
+          // For first render (old messages), scroll after a longer delay
+          const initialScrollTimer = setTimeout(() => {
+            scrollToBottom();
+            isFirstRender.current = false;
+          }, 100);
+          return () => clearTimeout(initialScrollTimer);
+        }
+      }, 0);
+      return () => clearTimeout(scrollTimer);
+    }
+  }, [messages, scrollToBottom]);
   useEffect(() => {
     console.log("form use effect : ", selectedMessages);
   }, [selectedMessages]);
@@ -191,22 +237,28 @@ export default function ChatInterface({
   }, [contextMenu]);
 
   //   const messagesEndRef = useRef(null);
-  const chatContainerRef = useRef(null);
+  // const chatContainerRef = useRef(null);
 
-  const scrollToBottom = () => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop =
-        chatContainerRef.current.scrollHeight;
-    }
-  };
-  const joinGroup = (groupId) => {
+  // const scrollToBottom = () => {
+  //   if (chatContainerRef.current) {
+  //     chatContainerRef.current.scrollTop =
+  //       chatContainerRef.current.scrollHeight;
+  //   }
+  // };
+
+  const joinGroup = (groupId, unreadSts, updateGroups, groups) => {
     if (currentGroup === groupId) {
       console.log(`Already in group: ${groupId}`);
       return; // Prevent redundant joins
     }
     setCurrentGroup(groupId);
-    socket.emit("joinGroup", groupId);
+    socket.emit("joinGroup", { groupId, unreadSts });
     console.log(`Joined group: ${groupId}`);
+    console.log("revrerse groups : ", groups);
+    const newGrp = groups.map((group) => {
+      return { ...group, unread: false };
+    });
+    updateGroups(newGrp);
   };
   const sendMessage = async (message) => {
     if (!currentGroup) {
@@ -231,9 +283,10 @@ export default function ChatInterface({
   const handleSubmit = async (e) => {
     e.preventDefault();
     // setMessages([...messages, { text: newMessage, sent: true }]);
-    scrollToBottom();
     if (newMessage.trim()) {
       await sendMessage(newMessage);
+      // scrollToBottom();
+      requestAnimationFrame(scrollToBottom);
     }
     setNewMessage("");
   };
@@ -327,6 +380,42 @@ export default function ChatInterface({
     );
     setSelectedMessages([]);
   }, [selectedMessages]);
+  const formatMySQLTime = (mysqlTime) => {
+    // Parse the input time
+    const date = new Date(mysqlTime);
+
+    // Extract hours and minutes
+    let hours = date.getHours();
+    const minutes = date.getMinutes();
+
+    // Determine am/pm
+    const ampm = hours >= 12 ? "pm" : "am";
+
+    // Convert to 12-hour format
+    hours = hours % 12 || 12; // Convert '0' hour to '12' for 12-hour format
+
+    // Format minutes to always be two digits
+    const formattedMinutes = minutes.toString().padStart(2, "0");
+
+    // Construct the formatted time
+    return `${hours}:${formattedMinutes}${ampm}`;
+  };
+  const groupMessagesByDate = (_) => {
+    return _.reduce((acc, message) => {
+      // Extract the date part of the timestamp (e.g., "2025-01-17")
+      const date = new Date(message.sent_at).toISOString().split("T")[0];
+
+      // Check if the date already exists in the accumulator
+      if (!acc[date]) {
+        acc[date] = [];
+      }
+
+      // Add the message to the appropriate date group
+      acc[date].push(message);
+
+      return acc;
+    }, {});
+  };
 
   return (
     <>
@@ -357,9 +446,10 @@ export default function ChatInterface({
             setCurrentGroup={setCurrentGroup}
             globeEnrolledCourses={globeEnrolledCourses}
             joinGroup={joinGroup}
+            setCurrentGroupName={setCurrentGroupName}
           />
         </div>
-        {currentGroup ? (
+        {currentGroup && currentGroupName ? (
           <>
             <Card
               className="w-[580px] h-[600px] bg-zinc-950 border-zinc-800"
@@ -373,7 +463,9 @@ export default function ChatInterface({
                   <AvatarFallback>SD</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-white">{name}</h3>
+                  <h3 className="font-semibold text-white">
+                    {currentGroupName}
+                  </h3>
                   <p className="text-sm text-zinc-400">{email}</p>
                 </div>
                 {selectedMessages.length > 0 ? (
@@ -405,111 +497,148 @@ export default function ChatInterface({
               <div
                 ref={chatContainerRef}
                 className="chatUIContainer flex-1 p-4 overflow-y-auto h-[calc(100%-140px)] space-y-4"
+                style={{ scrollBehavior: "smooth" }}
               >
-                {messages?.map((message, index) => (
-                  <div
-                    key={message.messageId}
-                    onContextMenu={(e) =>
-                      handleContextMenu(e, message.messageId, selectedMessages)
-                    }
-                    className={`flex ${
-                      message.sent ? "justify-end" : "justify-start"
-                    }`}
-                    onClick={() =>
-                      handleSelectMessageByClicking(
-                        message.messageId,
-                        selectedMessages
-                      )
-                    }
-                  >
-                    {!message.sent ? (
-                      <>
-                        <div
-                          style={{
-                            position: "relative",
-                            bottom: "10px",
-                          }}
-                        >
-                          <Avatar
-                            className={"w-[30px] h-[30px]"}
-                            style={{
-                              marginTop: "16px",
-                            }}
-                          >
-                            <AvatarImage src="/placeholder.svg" />
-                            <AvatarFallback>SD</AvatarFallback>
-                          </Avatar>
-                        </div>
-                      </>
-                    ) : (
-                      <></>
-                    )}
+                {Object.keys(groupedMessages).map((date) => (
+                  <div key={date}>
+                    {/* Date Separator */}
                     <div
-                      className={`rounded-lg px-4 py-2 max-w-[80%] ${
-                        message.sent
-                          ? "bg-white text-zinc-900 recivers-message"
-                          : "bg-zinc-800 text-zinc-100 senders-messafe"
-                      } ${
-                        selectedMessages.includes(message.messageId)
-                          ? "opacity-50"
-                          : ""
-                      }`}
+                      className="date-separator"
+                      style={{
+                        textAlign: "center",
+                        margin: "10px 0",
+                        fontSize: "0.9em",
+                        cursor: "pointer",
+                      }}
                     >
-                      {!message.sent ? (
-                        <>
-                          <p
-                            style={{
-                              color: "yellow",
-                              position: "relative",
-                              top: "-8px",
-                              fontSize: "0.8em",
-                              left: "-9px",
-                            }}
-                          >
-                            {message.sender || "user not found"}
-                          </p>
-                        </>
-                      ) : (
-                        <></>
-                      )}
-                      {!message.sent ? (
-                        <>
-                          <div
-                            className="replay-icon"
-                            style={{
-                              position: "absolute",
-                              right: "-30px",
-                              cursor: "pointer",
-                              top: "50%",
-                            }}
-                          >
-                            <ReplyAll />
-                          </div>
-                        </>
-                      ) : (
-                        <></>
-                      )}
-                      {/* {!message.sent ? (
-                  <>
-                    <p style={{
-                          color: "yellow",
-                          position: "relative",
-                          top: "-8px",
-                          fontSize: "0.8em",
-                          left: "-9px",
-                    }}>nice name</p>
-                  </>
-                ) : (
-                  <></>
-                )} */}
-                      {/* <p>nice</p> */}
-                      {message.text}
-                      {selectedMessages.includes(message.messageId) && (
-                        <Check className="inline-block ml-2 h-4 w-4 text-green-500" />
-                      )}
+                      <Badge
+                        style={{
+                          color: "#fff",
+                          backgroundColor: "#9c27b0",
+                        }}
+                      >
+                        {new Date(date).toLocaleDateString(undefined, {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                      </Badge>
                     </div>
+
+                    {/* Messages for the Date */}
+                    {groupedMessages[date]?.map((message, index) => (
+                      <div
+                        key={message.messageId}
+                        onContextMenu={(e) =>
+                          handleContextMenu(
+                            e,
+                            message.messageId,
+                            selectedMessages
+                          )
+                        }
+                        className={`flex ${
+                          message.sent ? "justify-end" : "justify-start"
+                        }`}
+                        onClick={() =>
+                          handleSelectMessageByClicking(
+                            message.messageId,
+                            selectedMessages
+                          )
+                        }
+                      >
+                        {!message.sent ? (
+                          <>
+                            <div
+                              style={{
+                                position: "relative",
+                                bottom: "10px",
+                              }}
+                            >
+                              <Avatar
+                                className={"w-[30px] h-[30px]"}
+                                style={{
+                                  marginTop: "16px",
+                                }}
+                              >
+                                <AvatarImage src="/placeholder.svg" />
+                                <AvatarFallback>SD</AvatarFallback>
+                              </Avatar>
+                            </div>
+                          </>
+                        ) : (
+                          <></>
+                        )}
+                        <div
+                          className={`rounded-lg px-4 py-2 max-w-[80%] ${
+                            message.sent
+                              ? "bg-white text-zinc-900 recivers-message"
+                              : "bg-zinc-800 text-zinc-100 senders-messafe"
+                          } ${
+                            selectedMessages.includes(message.messageId)
+                              ? "opacity-50"
+                              : ""
+                          }`}
+                        >
+                          {!message.sent ? (
+                            <>
+                              <p
+                                style={{
+                                  color: "yellow",
+                                  position: "relative",
+                                  top: "-8px",
+                                  fontSize: "0.8em",
+                                  left: "-9px",
+                                }}
+                              >
+                                {message.sender || "user not found"}
+                              </p>
+                            </>
+                          ) : (
+                            <></>
+                          )}
+                          {!message.sent ? (
+                            <>
+                              <div
+                                className="replay-icon"
+                                style={{
+                                  position: "absolute",
+                                  right: "-30px",
+                                  cursor: "pointer",
+                                  top: "50%",
+                                }}
+                              >
+                                <ReplyAll />
+                              </div>
+                            </>
+                          ) : (
+                            <></>
+                          )}
+
+                          {message.text}
+
+                          {selectedMessages.includes(message.messageId) && (
+                            <Check className="inline-block ml-2 h-4 w-4 text-green-500" />
+                          )}
+                          <div
+                            className="message-sent-timestapmp"
+                            style={{
+                              // outline: "1px solid red",
+                              position: "relative",
+                              width: "100%",
+                              fontSize: "0.8rem",
+                              // float: "right",
+                              textAlign: "right",
+                              color: message.sent ? "#ff5722" : "#2196f3", // Ensure the conditional resolves to a single value
+                            }}
+                          >
+                            {formatMySQLTime(message.sent_at)}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ))}
+
                 {/* <div ref={messagesEndRef} /> */}
               </div>
 
@@ -568,3 +697,110 @@ export default function ChatInterface({
     </>
   );
 }
+
+// {messages?.map((message, index) => (
+//   <div
+//     key={message.messageId}
+//     onContextMenu={(e) =>
+//       handleContextMenu(e, message.messageId, selectedMessages)
+//     }
+//     className={`flex ${
+//       message.sent ? "justify-end" : "justify-start"
+//     }`}
+//     onClick={() =>
+//       handleSelectMessageByClicking(
+//         message.messageId,
+//         selectedMessages
+//       )
+//     }
+//   >
+//     {!message.sent ? (
+//       <>
+//         <div
+//           style={{
+//             position: "relative",
+//             bottom: "10px",
+//           }}
+//         >
+//           <Avatar
+//             className={"w-[30px] h-[30px]"}
+//             style={{
+//               marginTop: "16px",
+//             }}
+//           >
+//             <AvatarImage src="/placeholder.svg" />
+//             <AvatarFallback>SD</AvatarFallback>
+//           </Avatar>
+//         </div>
+//       </>
+//     ) : (
+//       <></>
+//     )}
+//     <div
+//       className={`rounded-lg px-4 py-2 max-w-[80%] ${
+//         message.sent
+//           ? "bg-white text-zinc-900 recivers-message"
+//           : "bg-zinc-800 text-zinc-100 senders-messafe"
+//       } ${
+//         selectedMessages.includes(message.messageId)
+//           ? "opacity-50"
+//           : ""
+//       }`}
+//     >
+//       {!message.sent ? (
+//         <>
+//           <p
+//             style={{
+//               color: "yellow",
+//               position: "relative",
+//               top: "-8px",
+//               fontSize: "0.8em",
+//               left: "-9px",
+//             }}
+//           >
+//             {message.sender || "user not found"}
+//           </p>
+//         </>
+//       ) : (
+//         <></>
+//       )}
+//       {!message.sent ? (
+//         <>
+//           <div
+//             className="replay-icon"
+//             style={{
+//               position: "absolute",
+//               right: "-30px",
+//               cursor: "pointer",
+//               top: "50%",
+//             }}
+//           >
+//             <ReplyAll />
+//           </div>
+//         </>
+//       ) : (
+//         <></>
+//       )}
+
+//       {message.text}
+
+//       {selectedMessages.includes(message.messageId) && (
+//         <Check className="inline-block ml-2 h-4 w-4 text-green-500" />
+//       )}
+//       <div
+//         className="message-sent-timestapmp"
+//         style={{
+//           // outline: "1px solid red",
+//           position: "relative",
+//           width: "100%",
+//           fontSize: "0.8rem",
+//           // float: "right",
+//           textAlign: "right",
+//           color: message.sent ? "#ff5722" : "#2196f3", // Ensure the conditional resolves to a single value
+//         }}
+//       >
+//         {formatMySQLTime(message.sent_at)}
+//       </div>
+//     </div>
+//   </div>
+// ))}

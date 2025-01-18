@@ -15,6 +15,7 @@ export default function GroupsUI({
   globeEnrolledCourses,
   setCurrentGroup,
   joinGroup,
+  setCurrentGroupName,
 }) {
   const messages = [
     { id: 1, status: "Unread Message", time: "34m", unread: true },
@@ -105,8 +106,9 @@ export default function GroupsUI({
               cursor: "pointer",
             }}
             onClick={() => {
-              joinGroup(group.chatroom_id);
+              joinGroup(group.chatroom_id, group.unread, setGroups, groups);
               setCurrentGroup(group.chatroom_id);
+              setCurrentGroupName(group.chatRoom_name);
             }}
             className="flex items-center justify-between p-3 hover:bg-muted/50 transition-colors"
           >

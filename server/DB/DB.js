@@ -252,7 +252,37 @@ async function fetchMessageWithGroupId(chatRoomId) {
     throw error;
   }
 }
-
+async function fetchUsersonChatRoomWithId(chatRoomId) {
+  try {
+    const query = "SELECT * FROM  usersChatRoom WHERE chatroom_id = ?";
+    const params = [chatRoomId];
+    return await queryDB(query, params);
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+async function insertUnreadMessage(userId, chatRoomId, timestamp) {
+  try {
+    const query = "INSERT INTO unread_message VALUES(?, ?, ?)";
+    const params = [userId, chatRoomId, timestamp];
+    return await queryDB(query, params);
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+async function removeUnreadSts(userId, chatRoomId) {
+  try {
+    const query =
+      "DELETE FROM unread_message WHERE userId = ? AND chatroom_id = ?";
+    const params = [userId, chatRoomId];
+    return await queryDB(query, params);
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
 
 module.exports = {
   insertUserAuthId,
@@ -268,5 +298,8 @@ module.exports = {
   fetchUserChatRoom,
   insertMessage,
   fetchMessageWithGroupId,
+  fetchUsersonChatRoomWithId,
+  insertUnreadMessage,
+  removeUnreadSts,
   // insertDummy
 };

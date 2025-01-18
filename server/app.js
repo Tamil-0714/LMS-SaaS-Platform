@@ -17,6 +17,9 @@ const {
   fetchUserChatRoom,
   insertMessage,
   fetchMessageWithGroupId,
+  fetchUsersonChatRoomWithId,
+  insertUnreadMessage,
+  removeUnreadSts,
 } = require("./DB/DB");
 const path = require("path");
 const fs = require("fs");
@@ -221,7 +224,7 @@ app.post("/enrollcourse/:id", verifyToken, async (req, res) => {
         );
         console.log("this is chatroom : ", chatRoom);
 
-        if (chatRoom.affectedRows === 1) {
+        if (chatRoom.affectedRows > 0) {
           res
             .status(200)
             .json({ userInfo: userId, success: true, duplicate: false });
@@ -427,31 +430,13 @@ const userJoinedGroup = async (user, groupId) => {
 };
 
 io.on("connection", (socket) => {
-  const thisUser = socket.user.authId;
+  const thisUser = socket.user.userId;
 
   // Add user to connectedUsers if not already present
   console.log(
     `user ${socket.user.userId} connected with socket id ${socket.id}`
   );
-  const oldMessage = [
-    { text: "1", sent: false, messageId: 100 },
-    { text: "2", sent: false, messageId: 105 },
-    {
-      text: "3",
-      sent: true,
-      messageId: 20,
-    },
-    { text: "4", sent: false, messageId: 324 },
-    { text: "5", sent: true, messageId: 41 },
-    { text: "6", sent: true, messageId: 52 },
-    { text: "7", sent: false, messageId: 64 },
-    { text: "8", sent: false, messageId: 27 },
-    {
-      text: "9",
-      sent: true,
-      messageId: 97,
-    },
-  ];
+
 
   socket.on("oldMessages", async ({ groupId }) => {
     console.log(
@@ -480,11 +465,18 @@ io.on("connection", (socket) => {
   userData.sockets.push(socket.id);
 
   // Listen for a user joining a group
-  socket.on("joinGroup", (groupId) => {
+  socket.on("joinGroup", async ({ groupId, unreadSts }) => {
     if (!userData.joinedGroups.includes(groupId)) {
       console.log(`${thisUser} joined group: ${groupId}`);
       userData.joinedGroups = [];
       userData.joinedGroups.push(groupId);
+      if (unreadSts) {
+        const unreadUpdateResult = await removeUnreadSts(
+          socket.user.userId,
+          groupId
+        );
+        console.log("unread update res : ", unreadUpdateResult);
+      }
     } else {
       console.log(`${thisUser} is already in group: ${groupId}`);
     }
@@ -497,16 +489,55 @@ io.on("connection", (socket) => {
     const userId = socket.user.userId;
     try {
       const rows = await insertMessage(groupId, userId, message, timestamp);
+      const thisRoomUsers = await fetchUsersonChatRoomWithId(groupId);
+      let unreadInsertionResult = true;
+      for (let i = 0; i < thisRoomUsers.length; i++) {
+        try {
+          const user = thisRoomUsers[i];
+          const currectUserOnMap = connectedUsers.get(user.userId);
+          console.log("logging userData : ", currectUserOnMap);
+          if (currectUserOnMap?.joinedGroups.includes(user.chatroom_id)) {
+            console.log("breaking braking breaking continiign ");
+            continue;
+          }
+
+          if (user.userId !== userId) {
+            const Unreadresult = await insertUnreadMessage(
+              user.userId,
+              user.chatroom_id,
+              getMySQLTimestamp()
+            );
+            if (Unreadresult.affectedRows !== 1) {
+              unreadInsertionResult = false;
+            } else {
+              console.log("failed result : ", Unreadresult);
+            }
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      }
+      if (!unreadInsertionResult) {
+        console.error("unreadr insertion fialed ");
+      }
       if (rows.affectedRows === 1) {
         connectedUsers.forEach((user, userId) => {
           if (user.joinedGroups.includes(groupId)) {
             // Broadcast the message to all sockets of this user
+            // {
+            //     "text": "hey you nice",
+            //     "sent": false,
+            //     "sender": "vitry_me",
+            //     "messageId": 23,
+            //     "sent_at": "2025-01-18T10:25:02.000Z"
+            // }
             user.sockets.forEach((socketId) => {
               io.to(socketId).emit("groupMessage", {
                 groupId,
                 message,
                 sender: socket.user.userId,
                 messageId: rows.insertId,
+                sent_at: new Date().toISOString(),
               });
             });
           }

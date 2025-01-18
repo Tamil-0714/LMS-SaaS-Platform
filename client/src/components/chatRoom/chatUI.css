@@ -62,7 +62,7 @@
     margin-top: 16px;
 }
 .recivers-message {
-    /* margin-bottom: 32px; */
+    margin-bottom: 32px;
 }
 .senders-messafe::before {
   content: "";
@@ -76,3 +76,5 @@
   border-color: transparent rgb(39 39 42 / var(--tw-bg-opacity, 1)) transparent transparent; 
   /* border-color: transparent #ff0000 transparent transparent; */
 }
+
+
