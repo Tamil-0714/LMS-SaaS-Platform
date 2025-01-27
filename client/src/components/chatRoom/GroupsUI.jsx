@@ -38,12 +38,12 @@ export default function GroupsUI({
   useEffect(() => {
     setEnrolledCourses(globeEnrolledCourses);
     setSelectedCourse(globeEnrolledCourses[0]?.course_id);
-    console.log("enrolments on gropus ui: ", enrolledCourses);
   }, [globeEnrolledCourses]);
   const fetchGroups = async (courseId) => {
     try {
       const headers = {
         "Content-Type": "application/json",
+        'ngrok-skip-browser-warning': 'true',
         authorization: localStorage.getItem("authToken"),
       };
       const response = await axios.get(
@@ -51,8 +51,7 @@ export default function GroupsUI({
         { headers: headers }
       );
       if (response.status === 200 && response.data.success) {
-        console.log(response.data.data);
-
+      
         setGroups(response.data.data);
       }
     } catch (error) {
@@ -65,7 +64,7 @@ export default function GroupsUI({
     }
   }, [selectedCourse]);
   useEffect(() => {
-    console.log("on finla : ", enrolledCourses);
+ 
   }, [enrolledCourses]);
 
   return (

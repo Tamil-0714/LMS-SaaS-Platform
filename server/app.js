@@ -5,6 +5,7 @@ const videoRoute = require("./routes/videoRoute");
 const { OAuth2Client } = require("google-auth-library");
 const axios = require("axios");
 const crypto = require("crypto");
+require("colors");
 const {
   insertUserAuthId,
   fetchCourses,
@@ -31,13 +32,15 @@ require("dotenv").config();
 
 const app = express();
 
-app.use(
-  cors({
-    origin: "http://localhost:5173",
-    methods: ["GET", "POST"],
-    credentials: true,
-  })
-);
+// app.use(
+//   cors({
+//     origin: "http://localhost:5173",
+//     methods: ["GET", "POST"],
+//     credentials: true,
+//   })
+// );
+
+app.use(cors());
 
 app.use(
   "/images/courseThumbnails",
@@ -222,14 +225,13 @@ app.post("/enrollcourse/:id", verifyToken, async (req, res) => {
           courseId,
           getMySQLTimestamp()
         );
-        console.log("this is chatroom : ", chatRoom);
 
         if (chatRoom.affectedRows > 0) {
           res
             .status(200)
             .json({ userInfo: userId, success: true, duplicate: false });
         } else {
-          console.log("somewned wrong with insertion ");
+          console.warn("somewned wrong with insertion ");
         }
       } catch (error) {
         throw error;
@@ -331,12 +333,6 @@ app.get("/groups/:id", verifyToken, async (req, res) => {
 
     if (rows && rows[0]) {
       // Use Promise.all with map to wait for all async operations
-      // console.log(
-      //   "before update : ",
-      //   req.user[0]?.userId,
-      //   "grp id : ",
-      //   rows[0].chatroom_id
-      // );
 
       const updatedRows = await Promise.all(
         rows.map(async (group) => {
@@ -437,16 +433,10 @@ io.on("connection", (socket) => {
     `user ${socket.user.userId} connected with socket id ${socket.id}`
   );
 
-
   socket.on("oldMessages", async ({ groupId }) => {
-    console.log(
-      `this user ${thisUser} requesting old message for this group `,
-      groupId
-    );
     try {
       if (await userJoinedGroup(socket.user.userId, groupId)) {
         const oldMessages = await fetchMessageWithGroupId(groupId);
-        console.log("message emiting ");
 
         socket.emit("oldMessagesResponse", { groupId, messages: oldMessages });
       }
@@ -467,7 +457,6 @@ io.on("connection", (socket) => {
   // Listen for a user joining a group
   socket.on("joinGroup", async ({ groupId, unreadSts }) => {
     if (!userData.joinedGroups.includes(groupId)) {
-      console.log(`${thisUser} joined group: ${groupId}`);
       userData.joinedGroups = [];
       userData.joinedGroups.push(groupId);
       if (unreadSts) {
@@ -475,18 +464,17 @@ io.on("connection", (socket) => {
           socket.user.userId,
           groupId
         );
-        console.log("unread update res : ", unreadUpdateResult);
       }
     } else {
-      console.log(`${thisUser} is already in group: ${groupId}`);
     }
-    console.log("on Join : ", connectedUsers);
   });
   // Handle receiving a message for a group
   socket.on("sendMessageToGroup", async ({ groupId, message }) => {
-    console.log(`Message to group ${groupId} from ${thisUser}:`, message);
     const timestamp = getMySQLTimestamp();
     const userId = socket.user.userId;
+    if (!userData.joinedGroups.includes(groupId)) {
+      return;
+    }
     try {
       const rows = await insertMessage(groupId, userId, message, timestamp);
       const thisRoomUsers = await fetchUsersonChatRoomWithId(groupId);
@@ -495,9 +483,8 @@ io.on("connection", (socket) => {
         try {
           const user = thisRoomUsers[i];
           const currectUserOnMap = connectedUsers.get(user.userId);
-          console.log("logging userData : ", currectUserOnMap);
+
           if (currectUserOnMap?.joinedGroups.includes(user.chatroom_id)) {
-            console.log("breaking braking breaking continiign ");
             continue;
           }
 
@@ -510,11 +497,10 @@ io.on("connection", (socket) => {
             if (Unreadresult.affectedRows !== 1) {
               unreadInsertionResult = false;
             } else {
-              console.log("failed result : ", Unreadresult);
             }
           }
         } catch (error) {
-          console.error(error);
+          console.error("just unread duplicaton".yellow);
         }
       }
       if (!unreadInsertionResult) {
@@ -547,8 +533,6 @@ io.on("connection", (socket) => {
       console.error("Error at sendMessageToGroup : ", error);
     }
     // Find all users in the group
-
-    console.log("After message senet : ", connectedUsers);
   });
   // Handle user disconnecting
   socket.on("disconnect", () => {

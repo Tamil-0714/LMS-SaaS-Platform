@@ -14,6 +14,7 @@ import config from "@/config";
 const verifyAuthToken = async (authToken, setUser, setGlobUser) => {
   const headers = {
     "Content-Type": "application/json",
+    'ngrok-skip-browser-warning': 'true',
     authorization: authToken,
   };
   try {
@@ -41,6 +42,7 @@ const verifyAuthToken = async (authToken, setUser, setGlobUser) => {
 const executeCode = async (language, code, setOutput) => {
   const headers = {
     "Content-Type": "application/json",
+    'ngrok-skip-browser-warning': 'true',
     authorization: localStorage.getItem("authToken"),
   };
   try {

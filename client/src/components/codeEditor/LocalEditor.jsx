@@ -80,6 +80,7 @@ const LocalEditor = ({
         {
           headers: {
             "Content-Type": "multipart/form-data",
+            'ngrok-skip-browser-warning': 'true',
             authorization: localStorage.getItem("authToken"),
           },
         }

@@ -1,5 +1,6 @@
 import React from "react";
 import { Button } from "../ui/button";
+import config from "@/config";
 
 
 const CourseCard = ({ courseType, courseTitle, courseDes, courseThumbnai }) => {
@@ -26,7 +27,7 @@ const CourseCard = ({ courseType, courseTitle, courseDes, courseThumbnai }) => {
               width: "100%",
               borderRadius: "2.25rem 2.25rem  0 0",
             }}
-            src={`http://localhost:8020${courseThumbnai}`}
+            src={`${config.apiBaseUrl}${courseThumbnai}`}
             alt="course thumbnail"
           />
         </div>

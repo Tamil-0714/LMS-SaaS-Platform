@@ -12,6 +12,7 @@ const Course = () => {
     const fetchCourse = async () => {
       const headers = {
         "Content-Type": "application/json",
+        'ngrok-skip-browser-warning': 'true',
         authorization: localStorage.getItem("authToken"),
       };
       const url = `${config.apiBaseUrl}/courses`;

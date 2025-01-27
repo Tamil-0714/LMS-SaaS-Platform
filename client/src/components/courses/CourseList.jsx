@@ -99,6 +99,7 @@ const CourseList = ({ courseMetaData }) => {
 
     const headers = {
       "Content-Type": "application/json",
+      'ngrok-skip-browser-warning': 'true',
       authorization: localStorage.getItem("authToken"),
     };
     console.log(headers);
@@ -237,7 +238,7 @@ const CourseList = ({ courseMetaData }) => {
                               }}
                             >
                               <img
-                                src={`http://localhost:8020${course.course_thumbnail}`}
+                                src={`${config.apiBaseUrl}${course.course_thumbnail}`}
                                 alt=""
                               />
                             </CardTitle>
@@ -314,7 +315,7 @@ const CourseList = ({ courseMetaData }) => {
                         >
                           <div className="absolute inset-0">
                             <img
-                              src={`http://localhost:8020${course.course_thumbnail}`}
+                              src={`${config.apiBaseUrl}{course.course_thumbnail}`}
                               style={
                                 isHovered
                                   ? {

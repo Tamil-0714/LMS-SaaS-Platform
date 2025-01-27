@@ -2,6 +2,7 @@ import React from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { CirclePlay } from "lucide-react";
+import config from "@/config";
 const tags = Array.from({ length: 50 }).map(
   (_, i, a) => `v1.2.0-beta.${a.length - i}`
 );
@@ -34,7 +35,7 @@ export const CourseContent = () => {
                       style={{
                         width: "80px",
                       }}
-                      src={`http://localhost:8020/images/courseThumbnail/09b8bf0345b3258c`}
+                      src={`${config.apiBaseUrl}/images/courseThumbnail/09b8bf0345b3258c`}
                       class="img-fluid rounded-top"
                       alt=""
                     />
@@ -43,9 +44,14 @@ export const CourseContent = () => {
                     <div key={tag} className="text-lg">
                       {tag}
                     </div>
-                    <div className="text-sm" style={{
-                      color:"#4CAF50"
-                    }}>39m 40s</div>
+                    <div
+                      className="text-sm"
+                      style={{
+                        color: "#4CAF50",
+                      }}
+                    >
+                      39m 40s
+                    </div>
                   </div>
                 </div>
                 <div

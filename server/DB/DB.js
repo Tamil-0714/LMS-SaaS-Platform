@@ -268,7 +268,7 @@ async function insertUnreadMessage(userId, chatRoomId, timestamp) {
     const params = [userId, chatRoomId, timestamp];
     return await queryDB(query, params);
   } catch (error) {
-    console.error(error);
+    // console.error(error);
     throw error;
   }
 }

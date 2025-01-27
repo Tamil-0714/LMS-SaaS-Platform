@@ -12,6 +12,7 @@ const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const verifyAuthToken = async (authToken, setUser, setGlobUser) => {
   const headers = {
     "Content-Type": "application/json",
+    'ngrok-skip-browser-warning': 'true',
     authorization: authToken,
   };
   console.log("auth token is verifying");
@@ -94,6 +95,7 @@ const OAuth = ({ style, setGlobUser }) => {
         {
           headers: {
             "Content-Type": "application/json",
+            'ngrok-skip-browser-warning': 'true',
           },
         }
       );
@@ -139,6 +141,7 @@ const OAuth = ({ style, setGlobUser }) => {
     try {
       const headers = {
         "Content-Type": "application/json",
+        'ngrok-skip-browser-warning': 'true',
         authorization: localStorage.getItem("authToken"),
       };
       const response = await axios.post(

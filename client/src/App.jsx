@@ -39,6 +39,7 @@ function App() {
     try {
       const headers = {
         "Content-Type": "application/json",
+        'ngrok-skip-browser-warning': 'true',
         authorization: localStorage.getItem("authToken") || "",
       };
       const response = await axios.get(`${config.apiBaseUrl}/enrollments`, {
@@ -56,14 +57,6 @@ function App() {
     fetchEnrolledCourses();
   }, []);
 
-  useEffect(() => {
-    console.log("from app.jsx : ", enrolledCourses);
-  }, [enrolledCourses]);
-
-  useEffect(()=>{
-    console.log("is changing : ",globUser);
-    
-  }, [globUser])
 
   return (
     <>

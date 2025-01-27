@@ -9,11 +9,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import "./chatUI.css";
 import { io } from "socket.io-client";
 import GroupsUI from "./GroupsUI";
+import config from "@/config";
 
-const socket = io("http://localhost:8020", {
+const socket = io(`${config.apiBaseUrl}`, {
   auth: {
     token: localStorage.getItem("authToken"),
   },
+  extraHeaders: {
+    'ngrok-skip-browser-warning': 'true',  // Skip the Ngrok warning page
+  }
 });
 
 const ContextMenu = ({ x, y, onSelect, onDelete, onCopy, selectInnerHTML }) => (
@@ -43,9 +47,6 @@ const ContextMenu = ({ x, y, onSelect, onDelete, onCopy, selectInnerHTML }) => (
 );
 
 export default function ChatInterface({
-  name,
-  email,
-  propMessages,
   userInfo,
   globeEnrolledCourses,
 }) {
@@ -63,9 +64,10 @@ export default function ChatInterface({
     socket.on(
       "groupMessage",
       ({ groupId, message, sender, messageId, sent_at }) => {
-        console.log(`Received message in group ${groupId}:`, message);
-        console.log("this is sender : ", sender);
-        console.log("this is local sender : ", userInfo);
+      
+        if (currentGroup !== groupId) {
+          return;
+        }
         setMessages((prev) => {
           const previousMessages = prev || [];
           const newMessages = [
@@ -120,7 +122,7 @@ export default function ChatInterface({
     return () => {
       socket.off("groupMessage");
     };
-  }, [userInfo]);
+  }, [userInfo, currentGroup]);
 
   useEffect(() => {
     // Emit the request for old messages
@@ -135,7 +137,6 @@ export default function ChatInterface({
       socket.off("oldMessagesResponse");
 
       socket.on("oldMessagesResponse", ({ groupId, messages: oldMessages }) => {
-        console.log(`Old messages for group ${groupId}:`, oldMessages);
         const formattedMessages = oldMessages.map((message) => ({
           text: message.content,
           sent: message.userId === userInfo?.userId,
@@ -202,14 +203,14 @@ export default function ChatInterface({
   //   setMessages(propMessages);
   // }, [propMessages]);
   // useEffect(() => {
-  //   console.log("on : ", messages);
+  //  
   //   setGroupedMessages(groupMessagesByDate(messages));
   //   scrollToBottom();
   // }, [messages]);
 
   useEffect(() => {
     if (messages.length > 0) {
-      console.log("Messages updated:", messages);
+   
       setGroupedMessages(groupMessagesByDate(messages));
 
       // Add a small delay to ensure DOM has updated
@@ -228,13 +229,9 @@ export default function ChatInterface({
       return () => clearTimeout(scrollTimer);
     }
   }, [messages, scrollToBottom]);
-  useEffect(() => {
-    console.log("form use effect : ", selectedMessages);
-  }, [selectedMessages]);
+ 
 
-  useEffect(() => {
-    console.log(contextMenu);
-  }, [contextMenu]);
+
 
   //   const messagesEndRef = useRef(null);
   // const chatContainerRef = useRef(null);
@@ -248,13 +245,12 @@ export default function ChatInterface({
 
   const joinGroup = (groupId, unreadSts, updateGroups, groups) => {
     if (currentGroup === groupId) {
-      console.log(`Already in group: ${groupId}`);
+     
       return; // Prevent redundant joins
     }
     setCurrentGroup(groupId);
     socket.emit("joinGroup", { groupId, unreadSts });
-    console.log(`Joined group: ${groupId}`);
-    console.log("revrerse groups : ", groups);
+   
     const newGrp = groups.map((group) => {
       return { ...group, unread: false };
     });
@@ -294,7 +290,6 @@ export default function ChatInterface({
   const handleContextMenu = useCallback(
     (e, messageId) => {
       e.preventDefault();
-      console.log("this is selected messaes : ", selectedMessages);
 
       if (selectedMessages.includes(messageId)) {
         setContextMenu({
@@ -339,12 +334,7 @@ export default function ChatInterface({
 
   const handleDeleteMessage = useCallback(
     (messageId) => {
-      console.log(
-        "its got trigged : ",
-        selectedMessages,
-        "with messageid : ",
-        messageId
-      );
+
       setMessages((prev) =>
         prev.filter((message) => message.messageId !== messageId)
       );
@@ -466,7 +456,7 @@ export default function ChatInterface({
                   <h3 className="font-semibold text-white">
                     {currentGroupName}
                   </h3>
-                  <p className="text-sm text-zinc-400">{email}</p>
+                  <p className="text-sm text-zinc-400">{"users will add soon"}</p>
                 </div>
                 {selectedMessages.length > 0 ? (
                   <>

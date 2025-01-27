@@ -1,3 +1,4 @@
+import config from "@/config";
 import React, { useState, useEffect } from "react";
 import ReactPlayer from "react-player";
 
@@ -9,7 +10,7 @@ const VideoPlayer = ({ videoId }) => {
       const authToken = localStorage.getItem("authToken");
 
       try {
-        const response = await fetch(`http://localhost:8020/video/${videoId}`, {
+        const response = await fetch(`${config.apiBaseUrl}/video/${videoId}`, {
           headers: {
             Authorization: authToken,
           },

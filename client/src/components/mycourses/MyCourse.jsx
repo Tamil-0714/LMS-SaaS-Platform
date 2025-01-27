@@ -79,7 +79,7 @@ const MyCourse = ({ globeEnrolledCourses }) => {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            console.log(notesAreaRef.current.value);
+          
           }}
         >
           <Textarea
