@@ -413,6 +413,8 @@ io.use(verifyTokenSocket);
 
 const connectedUsers = new Map();
 
+// git test commadn 
+
 const userJoinedGroup = async (user, groupId) => {
   try {
     const rows = await fetchUserChatRoom(user, groupId);
