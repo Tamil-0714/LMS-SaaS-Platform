@@ -14,6 +14,7 @@ import ChatRoom from "./components/chatRoom/ChatRoom";
 import MyCourse from "./components/mycourses/MyCourse";
 import axios from "axios";
 import config from "./config";
+import Assignment from "./components/assignment/Assignment";
 
 function App() {
   const [globUser, setGlobUser] = useState(null);
@@ -34,12 +35,15 @@ function App() {
   const updateMyCourseComponetAsPresesnt = () => {
     setCurrentComponet("mycourses");
   };
+  const updateAssignmentComponetAsPresesnt = () => {
+    setCurrentComponet("assignment");
+  };
 
   const fetchEnrolledCourses = async () => {
     try {
       const headers = {
         "Content-Type": "application/json",
-        'ngrok-skip-browser-warning': 'true',
+        "ngrok-skip-browser-warning": "true",
         authorization: localStorage.getItem("authToken") || "",
       };
       const response = await axios.get(`${config.apiBaseUrl}/enrollments`, {
@@ -57,7 +61,6 @@ function App() {
     fetchEnrolledCourses();
   }, []);
 
-
   return (
     <>
       {/* <OAuth /> */}
@@ -69,6 +72,7 @@ function App() {
           changeToCourse={updateCourseComponetAsPresesnt}
           changeToChatRoom={updateChatRoomComponetAsPresesnt}
           changeToMyCourse={updateMyCourseComponetAsPresesnt}
+          changeToAssignment={updateAssignmentComponetAsPresesnt}
         />
         <main style={{ width: "100%" }}>
           <SidebarTrigger />
@@ -83,8 +87,9 @@ function App() {
           {/* <Course/> */}
           {/* <CodeEditor /> */}
           {/* <ChatRoom userInfo={globUser} /> */}
+          <Assignment globeEnrolledCourses={enrolledCourses} />
 
-          {currentComponet === "home" ? (
+          {/* {currentComponet === "home" ? (
             <HomeComponetn />
           ) : currentComponet === "codePlayGround" ? (
             <CodeEditor />
@@ -98,9 +103,11 @@ function App() {
             />
           ) : currentComponet === "mycourses" ? (
             <MyCourse globeEnrolledCourses={enrolledCourses} />
+          ) : currentComponet === "assignment" ? (
+            <Assignment globeEnrolledCourses={enrolledCourses} />
           ) : (
-            <div>no componet choosed</div>
-          )}
+            <div>no componet found</div>
+          )} */}
           {/* home componet and other main frame comps. will be render here */}
         </main>
         <Toaster position="top-center" richColors />

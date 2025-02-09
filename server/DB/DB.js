@@ -283,6 +283,42 @@ async function removeUnreadSts(userId, chatRoomId) {
     throw error;
   }
 }
+async function fetchQuestionWithCourseId(courseId) {
+  try {
+    const query = `
+    SELECT quiz_id, course_id, quiz_text, option_a, option_b, option_c, option_d, correct_option
+    FROM quiz
+    WHERE course_id = ?;
+  `;
+    const params = [courseId];
+    return await queryDB(query, params);
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+async function fetchChoosedAns(quizId, userId) {
+  try {
+    const query = `SELECT * FROM answer WHERE quiz_id = ? AND user_id = ?`;
+    const params = [quizId, userId];
+    return await queryDB(query, params);
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+async function insertAns(ansId, quizId, chosenAns, userId) {
+  try {
+    const score = 0;
+    const query =
+      "INSERT INTO answer (ans_id, quiz_id, user_id, chosed_option, score) VALUES (?, ?, ?, ?, ?)";
+    const params = [ansId, quizId, userId, chosenAns, score];
+    return await queryDB(query, params);
+  } catch (error) {
+    // console.error(error);
+    throw error;
+  }
+}
 
 module.exports = {
   insertUserAuthId,
@@ -301,5 +337,8 @@ module.exports = {
   fetchUsersonChatRoomWithId,
   insertUnreadMessage,
   removeUnreadSts,
+  fetchQuestionWithCourseId,
+  fetchChoosedAns,
+  insertAns,
   // insertDummy
 };

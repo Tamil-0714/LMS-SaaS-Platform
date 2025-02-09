@@ -21,6 +21,9 @@ const {
   fetchUsersonChatRoomWithId,
   insertUnreadMessage,
   removeUnreadSts,
+  fetchQuestionWithCourseId,
+  fetchChoosedAns,
+  insertAns,
 } = require("./DB/DB");
 const path = require("path");
 const fs = require("fs");
@@ -266,6 +269,63 @@ app.get("/enrollments", verifyToken, async (req, res) => {
   }
 });
 
+app.get("/questions/:id", verifyToken, async (req, res) => {
+  try {
+    const courseId = req.params.id;
+    const questions = await fetchQuestionWithCourseId(courseId);
+    if (questions.length > 0) {
+      return res.status(200).json({ success: true, data: questions });
+    } else
+      res.status(200).json({
+        success: false,
+        data: [],
+        message: "no question found for this course... ",
+      });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "internal server error" });
+  }
+});
+
+app.get("/chosenAns/:id", verifyToken, async (req, res) => {
+  try {
+    const userId = req.user[0]?.userId;
+    const quizId = req.params.id;
+    const rows = await fetchChoosedAns(quizId, userId);
+    if (rows.length > 0)
+      return res.status(200).json({ success: true, data: rows });
+    else
+      return res
+        .status(200)
+        .json({ success: false, message: "no data found", data: [] });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "internal server error" });
+  }
+});
+
+app.post("/insertAns", verifyToken, async (req, res) => {
+  try {
+    const userId = req.user[0]?.userId;
+    const { quizId, chosenOption } = req.body;
+    const rows = await insertAns(generateUUID(), quizId, chosenOption, userId);
+    if (rows.affectedRows === 1)
+      return res
+        .status(200)
+        .json({ message: "answer inserted", success: true });
+    else
+      return res
+        .status(200)
+        .json({ message: "something went wrong in insertion", success: false });
+  } catch (error) {
+    console.error(error);
+
+    return res
+      .status(200)
+      .json({ message: "internal server error", success: false });
+  }
+});
+
 // app.get("/groups/:id", verifyToken, async (req, res) => {
 //   try {
 //     const courseId = req.params.id;
@@ -413,7 +473,7 @@ io.use(verifyTokenSocket);
 
 const connectedUsers = new Map();
 
-// git test commadn 
+// git test commadn
 
 const userJoinedGroup = async (user, groupId) => {
   try {

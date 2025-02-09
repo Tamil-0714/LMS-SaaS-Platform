@@ -6,6 +6,7 @@ import {
   GraduationCap,
   MessageCircleMore,
   UserRoundPen,
+  PencilLine,
 } from "lucide-react";
 
 import {
@@ -27,6 +28,7 @@ export function AppSidebar({
   changeToCourse,
   changeToChatRoom,
   changeToMyCourse,
+  changeToAssignment,
 }) {
   const items = [
     {
@@ -46,6 +48,12 @@ export function AppSidebar({
       url: "#",
       icon: LibraryBig,
       clickerFunction: changeToMyCourse,
+    },
+    {
+      title: "Assignment & Exams",
+      url: "#",
+      icon: PencilLine,
+      clickerFunction: changeToAssignment,
     },
     {
       title: "Notes and Calendar",
